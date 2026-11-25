@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>ECO CITY 2040 — AR Ветрогенератор</title>
+
+  <!-- A-Frame и AR.js (стабильные версии для iOS и Android) -->
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #ffffff;
+    }
+
+    /* Верхняя панель статуса */
+    .hud-top {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .badge {
+      background: rgba(15, 17, 21, 0.78);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 12px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ff4d4f;
+      box-shadow: 0 0 8px #ff4d4f;
+      transition: all 0.3s ease;
+    }
+
+    .status-dot.active {
+      background: #2ecc71;
+      box-shadow: 0 0 10px #2ecc71;
+    }
+
+    /* Нижняя панель управления */
+    .hud-bottom {
+      position: fixed;
+      bottom: 14px;
+      left: 12px;
+      right: 12px;
+      z-index: 100;
+      background: rgba(15, 17, 21, 0.84);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 16px;
+      padding: 14px 16px;
+      pointer-events: auto;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 10px;
+      padding: 8px 4px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: #b0b8c4;
+      margin-bottom: 2px;
+    }
+
+    .stat-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffd400;
+    }
+
+    .stat-value.wind-val {
+      color: #4cc9f0;
+    }
+
+    .stat-value.home-val {
+      color: #2ecc71;
+    }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .slider-row label {
+      font-size: 13px;
+      white-space: nowrap;
+      color: #e2e8f0;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      accent-color: #2ecc71;
+      height: 6px;
+      cursor: pointer;
+    }
+
+    .actions-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      flex: 1;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s ease, background 0.2s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-mic {
+      background: #1e6bff;
+      color: #ffffff;
+    }
+
+    .btn-mic.listening {
+      background: #2ecc71;
+      color: #0f1115;
+    }
+
+    .btn-stop {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      flex: 0 0 auto;
+    }
+
+    .hint-text {
+      font-size: 11px;
+      color: #94a3b8;
+      text-align: center;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Верхний HUD -->
+  <div class="hud-top">
+    <div class="badge">
+      <span>ECO CITY 2040</span>
+    </div>
+    <div class="badge">
+      <span id="statusDot" class="status-dot"></span>
+      <span id="statusText">Наведите на маркер</span>
+    </div>
+  </div>
+
+  <!-- Нижний HUD -->
+  <div class="hud-bottom">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Ветер</div>
+        <div class="stat-value wind-val"><span id="windDisplay">6.0</span> м/с</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Мощность</div>
+        <div class="stat-value"><span id="powerDisplay">18</span> кВт</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Эко-дома</div>
+        <div class="stat-value home-val"><span id="homesDisplay">2</span> / 4</div>
+      </div>
+    </div>
+
+    <div class="slider-row">
+      <label for="windSlider">💨 Сила ветра:</label>
+      <input id="windSlider" type="range" min="0" max="20" step="0.5" value="6" />
+    </div>
+
+    <div class="actions-row">
+      <button id="micBtn" class="btn btn-mic">🎤 Подуть в микрофон</button>
+      <button id="calmBtn" class="btn btn-stop">Штиль</button>
+    </div>
+    <div id="micHint" class="hint-text">Двигайте ползунок или подуйте в микрофон телефона</div>
+  </div>
+
+  <!-- AR-сцена -->
+  <a-scene
+    embedded
+    vr-mode-ui="enabled: false"
+    renderer="logarithmicDepthBuffer: true; antialias: true; alpha: true;"
+    arjs="sourceType: webcam; debugUIEnabled: false;"
+  >
+    <!-- Маркер Hiro (базовый маркер для быстрого старта) -->
+    <a-marker preset="hiro" id="wind-marker" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
+      
+      <!-- Контейнер всей 3D-модели ветряка -->
+      <a-entity id="turbine-root" position="0 0 0" scale="0.75 0.75 0.75" wind-turbine-controller>
+
+        <!-- Освещение сцены -->
+        <a-light type="ambient" color="#ffffff" intensity="0.75"></a-light>
+        <a-light type="directional" color="#fffbe6" intensity="0.9" position="2 4 3"></a-light>
+
+        <!-- Основание (зелёная площадка + светящееся энергетическое кольцо) -->
+        <a-cylinder position="0 0.03 0" radius="0.65" height="0.06" color="#2e7d32"></a-cylinder>
+        <a-ring
+          id="energy-ring"
+          position="0 0.065 0"
+          rotation="-90 0 0"
+          radius-inner="0.45"
+          radius-outer="0.56"
+          material="color: #ffd400; emissive: #ffd400; emissiveIntensity: 0.7; opacity: 0.85; transparent: true;"
+        ></a-ring>
+
+        <!-- Белая мачта (коническая, как на макете) -->
+        <a-cylinder
+          position="0 1.15 0"
+          radius-bottom="0.11"
+          radius-top="0.065"
+          height="2.2"
+          color="#f4f6f8"
+          metalness="0.1"
+          roughness="0.4"
+        ></a-cylinder>
+
+        <!-- Две фирменные зелёные полосы на мачте -->
+        <a-cylinder position="0 0.95 0" radius-bottom="0.095" radius-top="0.093" height="0.08" color="#2ecc71"></a-cylinder>
+        <a-cylinder position="0 1.12 0" radius-bottom="0.091" radius-top="0.089" height="0.08" color="#2ecc71"></a-cylinder>
+
+        <!-- Гондола (генератор сверху) -->
+        <a-box position="0 2.28 0.02" width="0.18" height="0.18" depth="0.42" color="#e8edf2"></a-box>
+        <!-- Носовой обтекатель -->
+        <a-cone position="0 2.28 0.28" rotation="90 0 0" radius-bottom="0.09" radius-top="0.01" height="0.16" color="#ffffff"></a-cone>
+
+        <!-- Вращающийся ротор с 3 лопастями -->
+        <a-entity id="blades-rotor" position="0 2.28 0.24">
+          <!-- Лопасть 1 -->
+          <a-entity rotation="0 0 0">
+            <a-box position="0 0.55 0" width="0.09" height="1.05" depth="0.02" rotation="0 18 0" color="#ffffff"></a-box>
+            <a-box position="0 0.95 0" width="0.075" height="0.15" depth="0.022" rotation="0 18 0" color="#2ecc71"></a-box>
+          </a-entity>
+          <!-- Лопасть 2 -->
+          <a-entity rotation="0 0 120">
+            <a-box position="0 0.55 0" width="0.09" height="1.05" depth="0.02" rotation="0 18 0" color="#ffffff"></a-box>
+            <a-box position="0 0.95 0" width="0.075" height="0.15" depth="0.022" rotation="0 18 0" color="#2ecc71"></a-box>
+          </a-entity>
+          <!-- Лопасть 3 -->
+          <a-entity rotation="0 0 240">
+            <a-box position="0 0.55 0" width="0.09" height="1.05" depth="0.02" rotation="0 18 0" color="#ffffff"></a-box>
+            <a-box position="0 0.95 0" width="0.075" height="0.15" depth="0.022" rotation="0 18 0" color="#2ecc71"></a-box>
+          </a-entity>
+        </a-entity>
+
+        <!-- Потоки ветра (анимируются в JS) -->
+        <a-entity id="wind-streams">
+          <a-box class="wind-line" position="-1.2 2.7 0.35" width="0.55" height="0.025" depth="0.025" material="color: #4cc9f0; emissive: #4cc9f0; opacity: 0.7; transparent: true;"></a-box>
+          <a-box class="wind-line" position="-0.4 2.2 0.45" width="0.65" height="0.025" depth="0.025" material="color: #90e0ef; emissive: #90e0ef; opacity: 0.7; transparent: true;"></a-box>
+          <a-box class="wind-line" position="0.5 1.8 0.30" width="0.50" height="0.025" depth="0.025" material="color: #4cc9f0; emissive: #4cc9f0; opacity: 0.7; transparent: true;"></a-box>
+          <a-box class="wind-line" position="-0.8 2.4 -0.15" width="0.60" height="0.025" depth="0.025" material="color: #caf0f8; emissive: #caf0f8; opacity: 0.6; transparent: true;"></a-box>
+          <a-box class="wind-line" position="0.2 2.9 0.10" width="0.45" height="0.025" depth="0.025" material="color: #90e0ef; emissive: #90e0ef; opacity: 0.6; transparent: true;"></a-box>
+        </a-entity>
+
+        <!-- Импульсы энергии, бегущие вниз по мачте -->
+        <a-entity id="energy-pulses">
+          <a-torus class="energy-pulse" position="0 2.0 0" rotation="90 0 0" radius="0.12" radius-tubular="0.018" material="color: #ffd400; emissive: #ffd400; opacity: 0.9; transparent: true;"></a-torus>
+          <a-torus class="energy-pulse" position="0 1.3 0" rotation="90 0 0" radius="0.13" radius-tubular="0.018" material="color: #ffd400; emissive: #ffd400; opacity: 0.9; transparent: true;"></a-torus>
+          <a-torus class="energy-pulse" position="0 0.6 0" rotation="90 0 0" radius="0.14" radius-tubular="0.018" material="color: #ffd400; emissive: #ffd400; opacity: 0.9; transparent: true;"></a-torus>
+        </a-entity>
+
+        <!-- Парящий 3D-индикатор мощности над ветряком -->
+        <a-entity position="0 3.55 0">
+          <a-plane width="1.5" height="0.42" material="color: #0f1115; opacity: 0.8; transparent: true;"></a-plane>
+          <a-text
+            id="ar-power-text"
+            value="18 kW | 6.0 m/s"
+            align="center"
+            color="#ffd400"
+            width="3.2"
+            position="0 0 0.02"
+          ></a-text>
+        </a-entity>
+
+      </a-entity>
+    </a-marker>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <script>
+    // Глобальное состояние ветра
+    const state = {
+      targetWind: 6.0,   // Целевая скорость ветра (м/с)
+      currentWind: 6.0,  // Текущая (сглаженная с инерцией)
+      micActive: false
+    };
+
+    const windSlider = document.getElementById('windSlider');
+    const windDisplay = document.getElementById('windDisplay');
+    const powerDisplay = document.getElementById('powerDisplay');
+    const homesDisplay = document.getElementById('homesDisplay');
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const micBtn = document.getElementById('micBtn');
+    const calmBtn = document.getElementById('calmBtn');
+    const micHint = document.getElementById('micHint');
+    const marker = document.getElementById('wind-marker');
+
+    // Отслеживание маркера
+    marker.addEventListener('markerFound', () => {
+      statusDot.classList.add('active');
+      statusText.textContent = 'Ветряк активен';
+    });
+
+    marker.addEventListener('markerLost', () => {
+      statusDot.classList.remove('active');
+      statusText.textContent = 'Наведите на маркер';
+    });
+
+    // Управление ползунком
+    windSlider.addEventListener('input', (e) => {
+      if (state.micActive) stopMic();
+      state.targetWind = parseFloat(e.target.value);
+    });
+
+    // Кнопка "Штиль"
+    calmBtn.addEventListener('click', () => {
+      if (state.micActive) stopMic();
+      state.targetWind = 0;
+      windSlider.value = 0;
+    });
+
+    // --- Датчик дыхания через микрофон ---
+    let audioCtx = null;
+    let analyser = null;
+    let micStream = null;
+    let micDataArray = null;
+
+    async function startMic() {
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContextClass();
+        const source = audioCtx.createMediaStreamSource(micStream);
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+        micDataArray = new Uint8Array(analyser.frequencyBinCount);
+
+        state.micActive = true;
+        micBtn.classList.add('listening');
+        micBtn.textContent = '🟢 Дуйте в микрофон!';
+        micHint.textContent = 'Подуйте на телефон — лопасти ускорятся';
+      } catch (err) {
+        micHint.textContent = 'Нет доступа к микрофону — используйте ползунок';
+        console.error('Ошибка микрофона:', err);
+      }
+    }
+
+    function stopMic() {
+      state.micActive = false;
+      if (micStream) {
+        micStream.getTracks().forEach((t) => t.stop());
+        micStream = null;
+      }
+      if (audioCtx) {
+        audioCtx.close();
+        audioCtx = null;
+      }
+      micBtn.classList.remove('listening');
+      micBtn.textContent = '🎤 Подуть в микрофон';
+      micHint.textContent = 'Двигайте ползунок или подуйте в микрофон телефона';
+    }
+
+    micBtn.addEventListener('click', () => {
+      if (state.micActive) {
+        stopMic();
+      } else {
+        startMic();
+      }
+    });
+
+    // Компонент A-Frame для анимации ветряка, ветра и энергии
+    AFRAME.registerComponent('wind-turbine-controller', {
+      init: function () {
+        this.rotor = document.getElementById('blades-rotor');
+        this.windLines = Array.from(document.querySelectorAll('.wind-line'));
+        this.energyPulses = Array.from(document.querySelectorAll('.energy-pulse'));
+        this.energyRing = document.getElementById('energy-ring');
+        this.arPowerText = document.getElementById('ar-power-text');
+        this.uiTimer = 0;
+      },
+
+      tick: function (time, timeDelta) {
+        const dt = Math.min(timeDelta / 1000, 0.1);
+
+        // Читаем уровень шума/дуновения с микрофона
+        if (state.micActive && analyser && micDataArray) {
+          analyser.getByteFrequencyData(micDataArray);
+          let sum = 0;
+          for (let i = 0; i < micDataArray.length; i++) {
+            sum += micDataArray[i];
+          }
+          const avg = sum / micDataArray.length;
+          // Преобразуем громкость дуновения в скорость ветра (0..20 м/с)
+          const mappedWind = Math.max(0, Math.min(20, (avg - 12) * 0.45));
+          state.targetWind = mappedWind;
+          windSlider.value = mappedWind.toFixed(1);
+        }
+
+        // Плавная инерция раскручивания и торможения лопастей
+        state.currentWind += (state.targetWind - state.currentWind) * Math.min(1, dt * 2.5);
+        if (state.currentWind < 0.05) state.currentWind = 0;
+
+        // 1. Вращение лопастей
+        if (this.rotor) {
+          const angularSpeed = state.currentWind * 0.55; // рад/с
+          this.rotor.object3D.rotation.z -= angularSpeed * dt;
+        }
+
+        // 2. Анимация потоков ветра
+        const windOpacity = Math.min(0.85, state.currentWind / 8);
+        for (let i = 0; i < this.windLines.length; i++) {
+          const line = this.windLines[i];
+          line.setAttribute('material', 'opacity', windOpacity);
+          if (state.currentWind > 0.2) {
+            line.object3D.position.x += (0.8 + state.currentWind * 0.28) * dt;
+            if (line.object3D.position.x > 1.6) {
+              line.object3D.position.x = -1.6;
+            }
+          }
+        }
+
+        // 3. Импульсы энергии вниз по мачте
+        const powerRatio = Math.min(1, state.currentWind / 14);
+        const pulseOpacity = state.currentWind > 1.0 ? 0.3 + powerRatio * 0.7 : 0;
+        for (let i = 0; i < this.energyPulses.length; i++) {
+          const pulse = this.energyPulses[i];
+          pulse.setAttribute('material', 'opacity', pulseOpacity);
+          if (state.currentWind > 1.0) {
+            pulse.object3D.position.y -= (0.4 + state.currentWind * 0.12) * dt;
+            if (pulse.object3D.position.y < 0.15) {
+              pulse.object3D.position.y = 2.15;
+            }
+          }
+        }
+
+        // Подсветка кольца у основания
+        if (this.energyRing) {
+          this.energyRing.setAttribute('material', 'opacity', 0.15 + powerRatio * 0.85);
+        }
+
+        // 4. Обновление цифр в интерфейсе (примерно 6 раз в секунду)
+        this.uiTimer += dt;
+        if (this.uiTimer > 0.15) {
+          this.uiTimer = 0;
+          const w = state.currentWind;
+          // Условная формула мощности для школьного проекта (0..100 кВт)
+          const powerKw = w < 1.5 ? 0 : Math.min(100, Math.round(0.45 * w * w + w));
+          const homes = powerKw === 0 ? 0 : Math.min(4, Math.max(1, Math.ceil(powerKw / 18)));
+
+          windDisplay.textContent = w.toFixed(1);
+          powerDisplay.textContent = powerKw;
+          homesDisplay.textContent = homes;
+
+          if (this.arPowerText) {
+            this.arPowerText.setAttribute('value', `${powerKw} kW | ${w.toFixed(1)} m/s`);
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
