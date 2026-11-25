@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <title>ECO CITY 2040 — AR Ветрогенератор</title>
+  <title>ECO CITY 2040 — WebAR Макет</title>
 
   <!-- A-Frame и AR.js -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -65,54 +65,93 @@
 
     .hud-bottom {
       position: fixed;
-      bottom: 14px;
-      left: 12px;
-      right: 12px;
+      bottom: 12px;
+      left: 10px;
+      right: 10px;
       z-index: 100;
-      background: rgba(15, 17, 21, 0.84);
+      background: rgba(15, 17, 21, 0.86);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.16);
       border-radius: 16px;
-      padding: 14px 16px;
+      padding: 12px 14px;
       pointer-events: auto;
-      max-width: 480px;
+      max-width: 500px;
       margin: 0 auto;
+    }
+
+    /* Переключатель зон (удобно для теста на Hiro и быстрого обзора) */
+    .zone-tabs {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+
+    .zone-tab {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #cbd5e1;
+      border-radius: 10px;
+      padding: 6px 2px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      transition: all 0.2s ease;
+    }
+
+    .zone-tab span.icon {
+      font-size: 15px;
+      line-height: 1;
+    }
+
+    .zone-tab.active {
+      background: rgba(30, 107, 255, 0.32);
+      border-color: #1e6bff;
+      color: #ffffff;
+    }
+
+    .zone-panel {
+      display: none;
+    }
+
+    .zone-panel.active {
+      display: block;
     }
 
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       text-align: center;
     }
 
     .stat-card {
       background: rgba(255, 255, 255, 0.07);
       border-radius: 10px;
-      padding: 8px 4px;
+      padding: 7px 4px;
     }
 
     .stat-label {
-      font-size: 11px;
+      font-size: 10px;
       color: #b0b8c4;
       margin-bottom: 2px;
     }
 
     .stat-value {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 700;
       color: #ffd400;
     }
 
-    .stat-value.wind-val {
-      color: #4cc9f0;
-    }
-
-    .stat-value.home-val {
-      color: #2ecc71;
-    }
+    .stat-value.blue { color: #4cc9f0; }
+    .stat-value.green { color: #2ecc71; }
+    .stat-value.pink { color: #ff85b3; }
 
     .slider-row {
       display: flex;
@@ -122,7 +161,7 @@
     }
 
     .slider-row label {
-      font-size: 13px;
+      font-size: 12px;
       white-space: nowrap;
       color: #e2e8f0;
     }
@@ -143,8 +182,8 @@
       flex: 1;
       border: none;
       border-radius: 10px;
-      padding: 10px 12px;
-      font-size: 13px;
+      padding: 9px 10px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       transition: transform 0.1s ease, background 0.2s ease;
@@ -154,17 +193,22 @@
       transform: scale(0.97);
     }
 
-    .btn-mic {
+    .btn-primary {
       background: #1e6bff;
       color: #ffffff;
     }
 
-    .btn-mic.listening {
+    .btn-green {
       background: #2ecc71;
       color: #0f1115;
     }
 
-    .btn-stop {
+    .btn-yellow {
+      background: #ffd400;
+      color: #0f1115;
+    }
+
+    .btn-secondary {
       background: rgba(255, 255, 255, 0.12);
       color: #ffffff;
       flex: 0 0 auto;
@@ -174,7 +218,7 @@
       font-size: 11px;
       color: #94a3b8;
       text-align: center;
-      margin-top: 8px;
+      margin-top: 7px;
     }
   </style>
 </head>
@@ -193,148 +237,440 @@
 
   <!-- Нижний HUD -->
   <div class="hud-bottom">
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">Ветер</div>
-        <div class="stat-value wind-val"><span id="windDisplay">6.0</span> м/с</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Мощность</div>
-        <div class="stat-value"><span id="powerDisplay">18</span> кВт</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Эко-дома</div>
-        <div class="stat-value home-val"><span id="homesDisplay">2</span> / 4</div>
-      </div>
+    <!-- Вкладки 5 зон -->
+    <div class="zone-tabs">
+      <button class="zone-tab active" data-zone="1"><span class="icon">🌬️</span>Ветряк</button>
+      <button class="zone-tab" data-zone="2"><span class="icon">♻️</span>Мусорка</button>
+      <button class="zone-tab" data-zone="3"><span class="icon">☀️</span>Дома</button>
+      <button class="zone-tab" data-zone="4"><span class="icon">🌳</span>Парк</button>
+      <button class="zone-tab" data-zone="5"><span class="icon">🏫</span>Школа</button>
     </div>
 
-    <div class="slider-row">
-      <label for="windSlider">💨 Сила ветра:</label>
-      <input id="windSlider" type="range" min="0" max="20" step="0.5" value="6" />
+    <!-- ПАНЕЛЬ 1: ВЕТРОГЕНЕРАТОР -->
+    <div id="panel-1" class="zone-panel active">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Ветер</div>
+          <div class="stat-value blue"><span id="windDisplay">6.0</span> м/с</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Мощность</div>
+          <div class="stat-value"><span id="powerDisplay">18</span> кВт</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Эко-дома</div>
+          <div class="stat-value green"><span id="homesDisplay">2</span> / 4</div>
+        </div>
+      </div>
+      <div class="slider-row">
+        <label for="windSlider">💨 Ветер:</label>
+        <input id="windSlider" type="range" min="0" max="20" step="0.5" value="6" />
+      </div>
+      <div class="actions-row">
+        <button id="micBtn" class="btn btn-primary">🎤 Подуть в микрофон</button>
+        <button id="calmBtn" class="btn btn-secondary">Штиль</button>
+      </div>
+      <div id="micHint" class="hint-text">Маркер 1 (или Hiro): двигайте ползунок или дуйте в микрофон</div>
     </div>
 
-    <div class="actions-row">
-      <button id="micBtn" class="btn btn-mic">🎤 Подуть в микрофон</button>
-      <button id="calmBtn" class="btn btn-stop">Штиль</button>
+    <!-- ПАНЕЛЬ 2: МУСОРКА (РАЗДЕЛЬНЫЙ СБОР) -->
+    <div id="panel-2" class="zone-panel">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Стекло (зел.)</div>
+          <div class="stat-value green"><span id="glassCount">0</span> шт</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Пластик (жёлт.)</div>
+          <div class="stat-value"><span id="plasticCount">0</span> шт</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Бумага (син.)</div>
+          <div class="stat-value blue"><span id="paperCount">0</span> шт</div>
+        </div>
+      </div>
+      <div class="slider-row">
+        <label for="sortSpeedSlider">⚡ Скорость:</label>
+        <input id="sortSpeedSlider" type="range" min="0.5" max="3" step="0.25" value="1.25" />
+      </div>
+      <div class="actions-row">
+        <button id="toggleSortBtn" class="btn btn-green">⏸ Пауза сортировки</button>
+        <button id="resetSortBtn" class="btn btn-secondary">Сброс</button>
+      </div>
+      <div class="hint-text">Маркер 2 (или Hiro): отходы автоматически распределяются по 3 бакам</div>
     </div>
-    <div id="micHint" class="hint-text">Двигайте ползунок или подуйте в микрофон телефона</div>
+
+    <!-- ПАНЕЛЬ 3: ЭКО-ДОМА С СОЛНЕЧНЫМИ ПАНЕЛЯМИ -->
+    <div id="panel-3" class="zone-panel">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Солнце</div>
+          <div class="stat-value"><span id="sunDisplay">85</span>%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Батарея</div>
+          <div class="stat-value green"><span id="batteryDisplay">60</span>%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Окна домов</div>
+          <div class="stat-value blue"><span id="lightsDisplay">День</span></div>
+        </div>
+      </div>
+      <div class="slider-row">
+        <label for="sunSlider">☀️ Время суток:</label>
+        <input id="sunSlider" type="range" min="0" max="100" step="1" value="55" />
+      </div>
+      <div class="actions-row">
+        <button id="noonBtn" class="btn btn-yellow">☀️ Полдень (Заряд)</button>
+        <button id="eveningBtn" class="btn btn-primary">🌙 Вечер (Свет)</button>
+      </div>
+      <div class="hint-text">Маркер 3 (или Hiro): днём панели заряжают батарею, вечером зажигают окна</div>
+    </div>
+
+    <!-- ПАНЕЛЬ 4: ПАРК И ЭКО-ПАРКОВКА -->
+    <div id="panel-4" class="zone-panel">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Заряд авто</div>
+          <div class="stat-value green"><span id="evChargeDisplay">45</span>%</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Водопад</div>
+          <div class="stat-value blue"><span id="waterfallDisplay">40</span> л/м</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Воздух</div>
+          <div class="stat-value pink">Чистый</div>
+        </div>
+      </div>
+      <div class="slider-row">
+        <label for="waterfallSlider">💧 Водопад:</label>
+        <input id="waterfallSlider" type="range" min="0" max="100" step="5" value="60" />
+      </div>
+      <div class="actions-row">
+        <button id="chargeEvBtn" class="btn btn-green">⚡ Заряжать авто: ВКЛ</button>
+      </div>
+      <div class="hint-text">Маркер 4 (или Hiro): круговорот воды в пруду и зарядка электромобилей</div>
+    </div>
+
+    <!-- ПАНЕЛЬ 5: ШКОЛА + ШПРИЦ 20 МЛ + ПОЛИВ РАСТЕНИЙ -->
+    <div id="panel-5" class="zone-panel">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Шприц-резервуар</div>
+          <div class="stat-value blue"><span id="syringeDisplay">0.0</span> / 20 мл</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Полив</div>
+          <div class="stat-value"><span id="irrigStatusDisplay">Ждёт</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Рост растений</div>
+          <div class="stat-value green"><span id="plantGrowthDisplay">15</span>%</div>
+        </div>
+      </div>
+      <div class="actions-row">
+        <button id="rainBtn" class="btn btn-primary">🌧️ Дождь</button>
+        <button id="irrigateBtn" class="btn btn-green">🌱 Полить</button>
+        <button id="resetSchoolBtn" class="btn btn-secondary">↺</button>
+      </div>
+      <div class="hint-text">Маркер 5 (или Hiro): соберите 20 мл дождя в шприц и полейте грядку</div>
+    </div>
   </div>
 
-  <!-- AR-сцена -->
+  <!-- AR-СЦЕНА (поддержка и Hiro, и 5 barcode-маркеров 3x3) -->
   <a-scene
     embedded
     vr-mode-ui="enabled: false"
     renderer="logarithmicDepthBuffer: true; antialias: true; alpha: true;"
-    arjs="sourceType: webcam; debugUIEnabled: false;"
+    arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+    eco-city-master
   >
-    <!-- Маркер Hiro -->
-    <a-marker preset="hiro" id="wind-marker" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
-      
-      <!-- Контейнер всей 3D-модели ветряка -->
-      <a-entity id="turbine-root" position="0 0 0" scale="0.75 0.75 0.75" wind-turbine-controller>
+    <!-- Глобальный свет -->
+    <a-light type="ambient" color="#ffffff" intensity="0.85"></a-light>
+    <a-light type="directional" color="#fffbe6" intensity="0.85" position="2 5 3"></a-light>
 
-        <!-- Освещение сцены -->
-        <a-light type="ambient" color="#ffffff" intensity="0.8"></a-light>
-        <a-light type="directional" color="#fffbe6" intensity="0.9" position="2 4 3"></a-light>
+    <!-- МАРКЕР HIRO (универсальный тестовый слот для всех 5 зон) -->
+    <a-marker preset="hiro" id="marker-hiro" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
+      <a-entity id="hiro-slot"></a-entity>
+    </a-marker>
 
-        <!-- Основание (зелёная площадка + светящееся энергетическое кольцо) -->
+    <!-- ============================================================ -->
+    <!-- МАРКЕР 1: ВЕТРОГЕНЕРАТОР -->
+    <!-- ============================================================ -->
+    <a-marker type="barcode" value="1" id="marker-1" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
+      <a-entity id="zone-1" position="0 0 0" scale="0.72 0.72 0.72">
         <a-cylinder position="0 0.03 0" radius="0.55" height="0.06" color="#2e7d32"></a-cylinder>
-        <a-ring
-          id="energy-ring"
-          position="0 0.075 0"
-          rotation="-90 0 0"
-          radius-inner="0.38"
-          radius-outer="0.48"
-          material="color: #ffd400; emissive: #ffd400; emissiveIntensity: 0.7; opacity: 0.85; transparent: true;"
-        ></a-ring>
+        <a-ring id="energy-ring" position="0 0.075 0" rotation="-90 0 0" radius-inner="0.38" radius-outer="0.48" material="color: #ffd400; emissive: #ffd400; emissiveIntensity: 0.7; opacity: 0.85; transparent: true;"></a-ring>
 
-        <!-- Белая мачта (надежный a-cylinder с точным radius) -->
-        <a-cylinder
-          position="0 1.15 0"
-          radius="0.08"
-          height="2.2"
-          segments-radial="24"
-          color="#f4f6f8"
-        ></a-cylinder>
+        <a-cylinder position="0 1.15 0" radius="0.08" height="2.2" segments-radial="24" color="#f4f6f8"></a-cylinder>
+        <a-cylinder position="0 0.25 0" radius="0.11" height="0.4" segments-radial="24" color="#e8edf2"></a-cylinder>
+        <a-cylinder position="0 0.95 0" radius="0.092" height="0.08" segments-radial="24" color="#2ecc71"></a-cylinder>
+        <a-cylinder position="0 1.12 0" radius="0.092" height="0.08" segments-radial="24" color="#2ecc71"></a-cylinder>
 
-        <!-- Нижнее утолщение основания мачты -->
-        <a-cylinder
-          position="0 0.25 0"
-          radius="0.11"
-          height="0.4"
-          segments-radial="24"
-          color="#e8edf2"
-        ></a-cylinder>
-
-        <!-- Две фирменные зелёные полосы на мачте (радиус больше на 0.01, чтобы не рябили) -->
-        <a-cylinder
-          position="0 0.95 0"
-          radius="0.092"
-          height="0.08"
-          segments-radial="24"
-          color="#2ecc71"
-        ></a-cylinder>
-        <a-cylinder
-          position="0 1.12 0"
-          radius="0.092"
-          height="0.08"
-          segments-radial="24"
-          color="#2ecc71"
-        ></a-cylinder>
-
-        <!-- Гондола (генератор сверху) -->
         <a-box position="0 2.27 0.02" width="0.18" height="0.18" depth="0.38" color="#e8edf2"></a-box>
-        <!-- Носовой обтекатель -->
         <a-sphere position="0 2.27 0.22" radius="0.09" color="#ffffff"></a-sphere>
 
-        <!-- Вращающийся ротор с 3 лопастями -->
         <a-entity id="blades-rotor" position="0 2.27 0.24">
-          <!-- Лопасть 1 -->
           <a-entity rotation="0 0 0">
             <a-box position="0 0.54 0" width="0.095" height="1.05" depth="0.022" rotation="0 16 0" color="#ffffff"></a-box>
             <a-box position="0 0.96 0" width="0.085" height="0.16" depth="0.028" rotation="0 16 0" color="#2ecc71"></a-box>
           </a-entity>
-          <!-- Лопасть 2 -->
           <a-entity rotation="0 0 120">
             <a-box position="0 0.54 0" width="0.095" height="1.05" depth="0.022" rotation="0 16 0" color="#ffffff"></a-box>
             <a-box position="0 0.96 0" width="0.085" height="0.16" depth="0.028" rotation="0 16 0" color="#2ecc71"></a-box>
           </a-entity>
-          <!-- Лопасть 3 -->
           <a-entity rotation="0 0 240">
             <a-box position="0 0.54 0" width="0.095" height="1.05" depth="0.022" rotation="0 16 0" color="#ffffff"></a-box>
             <a-box position="0 0.96 0" width="0.085" height="0.16" depth="0.028" rotation="0 16 0" color="#2ecc71"></a-box>
           </a-entity>
         </a-entity>
 
-        <!-- Потоки ветра -->
         <a-entity id="wind-streams">
           <a-box class="wind-line" position="-1.2 2.7 0.35" width="0.55" height="0.025" depth="0.025" material="color: #4cc9f0; emissive: #4cc9f0; opacity: 0.7; transparent: true;"></a-box>
           <a-box class="wind-line" position="-0.4 2.2 0.45" width="0.65" height="0.025" depth="0.025" material="color: #90e0ef; emissive: #90e0ef; opacity: 0.7; transparent: true;"></a-box>
           <a-box class="wind-line" position="0.5 1.8 0.30" width="0.50" height="0.025" depth="0.025" material="color: #4cc9f0; emissive: #4cc9f0; opacity: 0.7; transparent: true;"></a-box>
           <a-box class="wind-line" position="-0.8 2.4 -0.15" width="0.60" height="0.025" depth="0.025" material="color: #caf0f8; emissive: #caf0f8; opacity: 0.6; transparent: true;"></a-box>
-          <a-box class="wind-line" position="0.2 2.9 0.10" width="0.45" height="0.025" depth="0.025" material="color: #90e0ef; emissive: #90e0ef; opacity: 0.6; transparent: true;"></a-box>
         </a-entity>
 
-        <!-- Импульсы энергии, бегущие вниз по мачте -->
         <a-entity id="energy-pulses">
           <a-torus class="energy-pulse" position="0 2.0 0" rotation="90 0 0" radius="0.14" radius-tubular="0.018" material="color: #ffd400; emissive: #ffd400; opacity: 0.9; transparent: true;"></a-torus>
           <a-torus class="energy-pulse" position="0 1.3 0" rotation="90 0 0" radius="0.14" radius-tubular="0.018" material="color: #ffd400; emissive: #ffd400; opacity: 0.9; transparent: true;"></a-torus>
           <a-torus class="energy-pulse" position="0 0.6 0" rotation="90 0 0" radius="0.14" radius-tubular="0.018" material="color: #ffd400; emissive: #ffd400; opacity: 0.9; transparent: true;"></a-torus>
         </a-entity>
+      </a-entity>
+    </a-marker>
 
-        <!-- Парящий 3D-индикатор мощности над ветряком -->
-        <a-entity position="0 3.55 0">
-          <a-plane width="1.6" height="0.42" material="color: #0f1115; opacity: 0.85; transparent: true; side: double;"></a-plane>
-          <a-text
-            id="ar-power-text"
-            value="18 kW | 6.0 m/s"
-            align="center"
-            color="#ffd400"
-            width="3.2"
-            position="0 0 0.06"
-          ></a-text>
+    <!-- ============================================================ -->
+    <!-- МАРКЕР 2: СТАНЦИЯ РАЗДЕЛЬНОГО СБОРА ОТХОДОВ -->
+    <!-- ============================================================ -->
+    <a-marker type="barcode" value="2" id="marker-2" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
+      <a-entity id="zone-2" position="0 0 0" scale="0.85 0.85 0.85">
+        <!-- Основание площадки -->
+        <a-box position="0 0.03 0" width="1.9" height="0.06" depth="1.0" color="#3a7d44"></a-box>
+        <!-- Белая задняя стенка и навес станции -->
+        <a-box position="0 0.65 -0.35" width="1.65" height="1.2" depth="0.08" color="#f8fafc"></a-box>
+        <a-box position="0 1.28 0" width="1.75" height="0.08" depth="0.85" rotation="8 0 0" color="#e2e8f0"></a-box>
+        <!-- Зелёная вывеска сверху -->
+        <a-box position="0 1.05 -0.29" width="1.35" height="0.22" depth="0.03" color="#2ecc71"></a-box>
+
+        <!-- Бак 1: Зелёный (Стекло) -->
+        <a-box position="-0.52 0.35 0.05" width="0.42" height="0.58" depth="0.42" color="#2e7d32"></a-box>
+        <a-box position="-0.52 0.66 0.05" width="0.46" height="0.06" depth="0.46" color="#1b5e20"></a-box>
+        <a-ring id="bin-ring-0" position="-0.52 0.08 0.05" rotation="-90 0 0" radius-inner="0.26" radius-outer="0.32" material="color: #2ecc71; emissive: #2ecc71; opacity: 0.2; transparent: true;"></a-ring>
+
+        <!-- Бак 2: Жёлтый (Пластик) -->
+        <a-box position="0 0.35 0.05" width="0.42" height="0.58" depth="0.42" color="#ffd400"></a-box>
+        <a-box position="0 0.66 0.05" width="0.46" height="0.06" depth="0.46" color="#e6b800"></a-box>
+        <a-ring id="bin-ring-1" position="0 0.08 0.05" rotation="-90 0 0" radius-inner="0.26" radius-outer="0.32" material="color: #ffd400; emissive: #ffd400; opacity: 0.2; transparent: true;"></a-ring>
+
+        <!-- Бак 3: Синий (Бумага) -->
+        <a-box position="0.52 0.35 0.05" width="0.42" height="0.58" depth="0.42" color="#1e6bff"></a-box>
+        <a-box position="0.52 0.66 0.05" width="0.46" height="0.06" depth="0.46" color="#1247b8"></a-box>
+        <a-ring id="bin-ring-2" position="0.52 0.08 0.05" rotation="-90 0 0" radius-inner="0.26" radius-outer="0.32" material="color: #4cc9f0; emissive: #4cc9f0; opacity: 0.2; transparent: true;"></a-ring>
+
+        <!-- Падающие 3D-отходы -->
+        <a-cylinder id="trash-glass" position="-0.52 1.8 0.05" radius="0.07" height="0.24" color="#4ade80"></a-cylinder>
+        <a-cylinder id="trash-plastic" position="0 2.2 0.05" radius="0.075" height="0.25" color="#fde047"></a-cylinder>
+        <a-box id="trash-paper" position="0.52 2.6 0.05" width="0.2" height="0.16" depth="0.04" color="#93c5fd"></a-box>
+      </a-entity>
+    </a-marker>
+
+    <!-- ============================================================ -->
+    <!-- МАРКЕР 3: ЭКО-ДОМА С СОЛНЕЧНЫМИ ПАНЕЛЯМИ -->
+    <!-- ============================================================ -->
+    <a-marker type="barcode" value="3" id="marker-3" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
+      <a-entity id="zone-3" position="0 0 0" scale="0.8 0.8 0.8">
+        <!-- Газон квартала -->
+        <a-box position="0 0.03 0" width="2.2" height="0.06" depth="1.3" color="#65a30d"></a-box>
+
+        <!-- Дом 1 (слева) -->
+        <a-entity position="-0.68 0.06 0.05">
+          <a-box position="0 0.26 0" width="0.46" height="0.52" depth="0.46" color="#fef3c7"></a-box>
+          <a-box position="0 0.58 -0.1" width="0.52" height="0.06" depth="0.36" rotation="30 0 0" color="#dc2626"></a-box>
+          <a-box position="0 0.58 0.1" width="0.52" height="0.06" depth="0.36" rotation="-30 0 0" color="#dc2626"></a-box>
+          <!-- Солнечная панель на крыше -->
+          <a-box class="solar-panel" position="0 0.62 0.12" width="0.34" height="0.03" depth="0.24" rotation="-30 0 0" material="color: #1e3a8a; emissive: #1e6bff; emissiveIntensity: 0.3;"></a-box>
+          <!-- Окна -->
+          <a-box class="house-window" position="-0.11 0.28 0.235" width="0.12" height="0.14" depth="0.02" material="color: #334155; emissive: #ffd400; emissiveIntensity: 0;"></a-box>
+          <a-box class="house-window" position="0.11 0.28 0.235" width="0.12" height="0.14" depth="0.02" material="color: #334155; emissive: #ffd400; emissiveIntensity: 0;"></a-box>
         </a-entity>
 
+        <!-- Дом 2 (в центре) -->
+        <a-entity position="0 0.06 -0.1">
+          <a-box position="0 0.30 0" width="0.50" height="0.60" depth="0.50" color="#fef3c7"></a-box>
+          <a-box position="0 0.66 -0.11" width="0.56" height="0.06" depth="0.38" rotation="30 0 0" color="#dc2626"></a-box>
+          <a-box position="0 0.66 0.11" width="0.56" height="0.06" depth="0.38" rotation="-30 0 0" color="#dc2626"></a-box>
+          <a-box class="solar-panel" position="0 0.70 0.13" width="0.38" height="0.03" depth="0.26" rotation="-30 0 0" material="color: #1e3a8a; emissive: #1e6bff; emissiveIntensity: 0.3;"></a-box>
+          <a-box class="house-window" position="-0.12 0.34 0.255" width="0.13" height="0.15" depth="0.02" material="color: #334155; emissive: #ffd400; emissiveIntensity: 0;"></a-box>
+          <a-box class="house-window" position="0.12 0.34 0.255" width="0.13" height="0.15" depth="0.02" material="color: #334155; emissive: #ffd400; emissiveIntensity: 0;"></a-box>
+        </a-entity>
+
+        <!-- Дом 3 (справа) -->
+        <a-entity position="0.68 0.06 0.05">
+          <a-box position="0 0.26 0" width="0.46" height="0.52" depth="0.46" color="#fef3c7"></a-box>
+          <a-box position="0 0.58 -0.1" width="0.52" height="0.06" depth="0.36" rotation="30 0 0" color="#dc2626"></a-box>
+          <a-box position="0 0.58 0.1" width="0.52" height="0.06" depth="0.36" rotation="-30 0 0" color="#dc2626"></a-box>
+          <a-box class="solar-panel" position="0 0.62 0.12" width="0.34" height="0.03" depth="0.24" rotation="-30 0 0" material="color: #1e3a8a; emissive: #1e6bff; emissiveIntensity: 0.3;"></a-box>
+          <a-box class="house-window" position="-0.11 0.28 0.235" width="0.12" height="0.14" depth="0.02" material="color: #334155; emissive: #ffd400; emissiveIntensity: 0;"></a-box>
+          <a-box class="house-window" position="0.11 0.28 0.235" width="0.12" height="0.14" depth="0.02" material="color: #334155; emissive: #ffd400; emissiveIntensity: 0;"></a-box>
+        </a-entity>
+
+        <!-- 3D Солнце -->
+        <a-sphere id="ar-sun" position="0 1.85 0" radius="0.24" material="color: #ffd400; emissive: #ffa500; emissiveIntensity: 0.9;"></a-sphere>
+
+        <!-- Солнечные лучи к крышам -->
+        <a-entity id="sun-rays">
+          <a-cylinder class="sun-ray" position="-0.35 1.25 0.08" radius="0.018" height="1.1" rotation="0 0 -22" material="color: #ffd400; emissive: #ffd400; opacity: 0.6; transparent: true;"></a-cylinder>
+          <a-cylinder class="sun-ray" position="0 1.28 0" radius="0.018" height="1.05" rotation="0 0 0" material="color: #ffd400; emissive: #ffd400; opacity: 0.6; transparent: true;"></a-cylinder>
+          <a-cylinder class="sun-ray" position="0.35 1.25 0.08" radius="0.018" height="1.1" rotation="0 0 22" material="color: #ffd400; emissive: #ffd400; opacity: 0.6; transparent: true;"></a-cylinder>
+        </a-entity>
+
+        <!-- 3D Индикатор заряда батареи рядом с домами -->
+        <a-entity position="0.98 0.45 0.42">
+          <a-box position="0 0 0" width="0.18" height="0.65" depth="0.18" material="color: #ffffff; opacity: 0.22; transparent: true;"></a-box>
+          <a-box id="battery-fill" position="0 -0.15 0" width="0.14" height="0.35" depth="0.14" material="color: #2ecc71; emissive: #2ecc71; emissiveIntensity: 0.5;"></a-box>
+        </a-entity>
+      </a-entity>
+    </a-marker>
+
+    <!-- ============================================================ -->
+    <!-- МАРКЕР 4: ЭКО-ПАРК (ПРУД, ВОДОПАД, САКУРА) И ЭКО-ПАРКОВКА -->
+    <!-- ============================================================ -->
+    <a-marker type="barcode" value="4" id="marker-4" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
+      <a-entity id="zone-4" position="0 0 0" scale="0.82 0.82 0.82">
+        <!-- Зелёная поляна -->
+        <a-box position="0 0.03 0" width="2.1" height="0.06" depth="1.35" color="#65a30d"></a-box>
+
+        <!-- Пруд справа -->
+        <a-cylinder position="0.42 0.065 0.12" radius="0.46" height="0.03" color="#0284c7"></a-cylinder>
+        <!-- Кувшинки -->
+        <a-cylinder position="0.30 0.085 0.24" radius="0.08" height="0.015" color="#22c55e"></a-cylinder>
+        <a-cylinder position="0.56 0.085 0.26" radius="0.06" height="0.015" color="#22c55e"></a-cylinder>
+        <!-- Круги на воде -->
+        <a-ring id="pond-ripple" position="0.42 0.09 -0.05" rotation="-90 0 0" radius-inner="0.06" radius-outer="0.12" material="color: #bae6fd; emissive: #7dd3fc; opacity: 0.8; transparent: true;"></a-ring>
+
+        <!-- Скала и анимированный водопад -->
+        <a-box position="0.45 0.32 -0.35" width="0.42" height="0.52" depth="0.28" color="#64748b"></a-box>
+        <a-entity id="waterfall-drops">
+          <a-box class="wf-drop" position="0.38 0.45 -0.18" width="0.06" height="0.14" depth="0.05" material="color: #38bdf8; emissive: #38bdf8; opacity: 0.85; transparent: true;"></a-box>
+          <a-box class="wf-drop" position="0.46 0.30 -0.16" width="0.06" height="0.14" depth="0.05" material="color: #7dd3fc; emissive: #7dd3fc; opacity: 0.85; transparent: true;"></a-box>
+          <a-box class="wf-drop" position="0.53 0.18 -0.17" width="0.06" height="0.14" depth="0.05" material="color: #bae6fd; emissive: #bae6fd; opacity: 0.85; transparent: true;"></a-box>
+        </a-entity>
+
+        <!-- Розовая сакура -->
+        <a-entity position="0.72 0.06 -0.22">
+          <a-cylinder position="0 0.45 0" radius="0.06" height="0.9" rotation="0 0 12" color="#5c4033"></a-cylinder>
+          <a-sphere position="-0.15 0.92 0.05" radius="0.26" color="#f472b6"></a-sphere>
+          <a-sphere position="0.14 0.88 -0.04" radius="0.24" color="#f9a8d4"></a-sphere>
+          <a-sphere position="0 1.08 0" radius="0.22" color="#fbcfe8"></a-sphere>
+        </a-entity>
+
+        <!-- Эко-парковка слева -->
+        <a-box position="-0.52 0.07 0.05" width="0.82" height="0.03" depth="0.82" color="#334155"></a-box>
+        <!-- Станция зарядки EV -->
+        <a-box position="-0.52 0.28 -0.32" width="0.16" height="0.42" depth="0.12" color="#f8fafc"></a-box>
+        <a-box position="-0.52 0.38 -0.25" width="0.10" height="0.12" depth="0.02" material="color: #2ecc71; emissive: #2ecc71;"></a-box>
+
+        <!-- Электромобиль 1 -->
+        <a-entity position="-0.70 0.15 0.15">
+          <a-box position="0 0 0" width="0.24" height="0.12" depth="0.44" color="#1e293b"></a-box>
+          <a-box position="0 0.10 -0.02" width="0.20" height="0.10" depth="0.24" color="#38bdf8"></a-box>
+        </a-entity>
+
+        <!-- Электромобиль 2 -->
+        <a-entity position="-0.34 0.15 0.15">
+          <a-box position="0 0 0" width="0.24" height="0.12" depth="0.44" color="#475569"></a-box>
+          <a-box position="0 0.10 -0.02" width="0.20" height="0.10" depth="0.24" color="#38bdf8"></a-box>
+        </a-entity>
+
+        <!-- Анимированные импульсы зарядки к авто -->
+        <a-sphere id="ev-pulse-1" position="-0.65 0.25 -0.15" radius="0.045" material="color: #2ecc71; emissive: #2ecc71; opacity: 0.9; transparent: true;"></a-sphere>
+        <a-sphere id="ev-pulse-2" position="-0.39 0.25 -0.15" radius="0.045" material="color: #2ecc71; emissive: #2ecc71; opacity: 0.9; transparent: true;"></a-sphere>
+      </a-entity>
+    </a-marker>
+
+    <!-- ============================================================ -->
+    <!-- МАРКЕР 5: ШКОЛА + ШПРИЦ-РЕЗЕРВУАР (20 МЛ) + ПОЛИВ РАСТЕНИЙ -->
+    <!-- ============================================================ -->
+    <a-marker type="barcode" value="5" id="marker-5" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
+      <a-entity id="zone-5" position="0 0 0" scale="0.78 0.78 0.78">
+        <!-- Основание -->
+        <a-box position="0 0.03 0" width="2.5" height="0.06" depth="1.2" color="#4d7c0f"></a-box>
+
+        <!-- Здание ШКОЛЫ (слева) -->
+        <a-entity position="-0.55 0.06 0">
+          <!-- Корпус -->
+          <a-box position="0 0.45 0" width="1.1" height="0.9" depth="0.65" color="#f8fafc"></a-box>
+          <!-- Зелёные декоративные колонны и фасад -->
+          <a-box position="-0.42 0.45 0.33" width="0.12" height="0.88" depth="0.03" color="#15803d"></a-box>
+          <a-box position="0.42 0.45 0.33" width="0.12" height="0.88" depth="0.03" color="#15803d"></a-box>
+          <a-box position="0 0.75 0.33" width="0.65" height="0.08" depth="0.04" color="#ffd400"></a-box>
+          <a-box position="0 0.18 0.33" width="0.22" height="0.32" depth="0.04" color="#1e293b"></a-box>
+          <!-- Двускатная зелёная крыша -->
+          <a-box position="-0.30 1.06 0" width="0.68" height="0.07" depth="0.72" rotation="0 0 26" color="#65a30d"></a-box>
+          <a-box position="0.30 1.06 0" width="0.68" height="0.07" depth="0.72" rotation="0 0 -26" color="#65a30d"></a-box>
+          <!-- Водосточный жёлоб справа от крыши к шприцу -->
+          <a-cylinder position="0.62 0.90 0" radius="0.035" height="0.26" rotation="0 0 70" color="#94a3b8"></a-cylinder>
+        </a-entity>
+
+        <!-- ШПРИЦ-РЕЗЕРВУАР 20 МЛ (прикреплён справа от школы) -->
+        <a-entity position="0.22 0.06 0">
+          <!-- Прозрачный корпус шприца -->
+          <a-cylinder position="0 0.46 0" radius="0.14" height="0.84" segments-radial="24" material="color: #e2e8f0; opacity: 0.32; transparent: true;"></a-cylinder>
+          <!-- Верхний ободок и поршень-крышка -->
+          <a-cylinder position="0 0.89 0" radius="0.18" height="0.03" color="#cbd5e1"></a-cylinder>
+          <!-- Шкала делений (5, 10, 15, 20 мл) -->
+          <a-box position="0 0.25 0.142" width="0.09" height="0.015" depth="0.01" color="#0f1115"></a-box>
+          <a-box position="0 0.45 0.142" width="0.12" height="0.015" depth="0.01" color="#0f1115"></a-box>
+          <a-box position="0 0.65 0.142" width="0.09" height="0.015" depth="0.01" color="#0f1115"></a-box>
+          <a-box position="0 0.83 0.142" width="0.12" height="0.015" depth="0.01" color="#0f1115"></a-box>
+          <!-- Уровень дождевой воды внутри шприца (масштабируется в JS) -->
+          <a-cylinder id="syringe-water" position="0 0.05 0" radius="0.125" height="0.78" segments-radial="24" scale="1 0.02 1" material="color: #0ea5e9; emissive: #38bdf8; emissiveIntensity: 0.35; opacity: 0.85; transparent: true;"></a-cylinder>
+          <!-- Носик шприца и трубка полива к растениям -->
+          <a-cylinder position="0.34 0.10 0" radius="0.025" height="0.62" rotation="0 0 90" color="#94a3b8"></a-cylinder>
+          <!-- Бегущая капля по трубке полива -->
+          <a-sphere id="pipe-drop" position="0.15 0.10 0" radius="0.045" material="color: #38bdf8; emissive: #38bdf8; opacity: 0; transparent: true;"></a-sphere>
+        </a-entity>
+
+        <!-- ГРЯДКА С РАСТЕНИЯМИ (между школой и ветряком) -->
+        <a-entity position="0.88 0.06 0">
+          <!-- Земля -->
+          <a-box position="0 0.04 0" width="0.72" height="0.08" depth="0.68" color="#5c4033"></a-box>
+          <!-- Растения (масштабируются по высоте при поливе) -->
+          <a-entity id="plants-group" position="0 0.08 0" scale="1 0.25 1">
+            <!-- Куст 1 -->
+            <a-cylinder position="-0.20 0.22 0.15" radius="0.025" height="0.44" color="#16a34a"></a-cylinder>
+            <a-sphere position="-0.20 0.45 0.15" radius="0.11" color="#22c55e"></a-sphere>
+            <a-sphere class="plant-flower" position="-0.20 0.56 0.15" radius="0.055" scale="0.01 0.01 0.01" color="#f43f5e"></a-sphere>
+            <!-- Куст 2 -->
+            <a-cylinder position="0 0.26 0" radius="0.025" height="0.52" color="#16a34a"></a-cylinder>
+            <a-sphere position="0 0.52 0" radius="0.12" color="#22c55e"></a-sphere>
+            <a-sphere class="plant-flower" position="0 0.64 0" radius="0.06" scale="0.01 0.01 0.01" color="#ffd400"></a-sphere>
+            <!-- Куст 3 -->
+            <a-cylinder position="0.20 0.22 -0.14" radius="0.025" height="0.44" color="#16a34a"></a-cylinder>
+            <a-sphere position="0.20 0.45 -0.14" radius="0.11" color="#22c55e"></a-sphere>
+            <a-sphere class="plant-flower" position="0.20 0.56 -0.14" radius="0.055" scale="0.01 0.01 0.01" color="#fb7185"></a-sphere>
+            <!-- Куст 4 -->
+            <a-cylinder position="-0.18 0.20 -0.15" radius="0.025" height="0.40" color="#15803d"></a-cylinder>
+            <a-sphere position="-0.18 0.40 -0.15" radius="0.10" color="#4ade80"></a-sphere>
+            <!-- Куст 5 -->
+            <a-cylinder position="0.18 0.20 0.15" radius="0.025" height="0.40" color="#15803d"></a-cylinder>
+            <a-sphere position="0.18 0.40 0.15" radius="0.10" color="#4ade80"></a-sphere>
+          </a-entity>
+        </a-entity>
+
+        <!-- Дождевое облако над школой -->
+        <a-entity id="rain-cloud" position="-0.45 1.88 0" visible="false">
+          <a-sphere position="-0.25 0 0" radius="0.22" color="#cbd5e1"></a-sphere>
+          <a-sphere position="0 0.08 0" radius="0.28" color="#e2e8f0"></a-sphere>
+          <a-sphere position="0.26 0 0" radius="0.22" color="#cbd5e1"></a-sphere>
+          <!-- Капли дождя -->
+          <a-cylinder class="rain-drop" position="-0.22 -0.35 0.08" radius="0.018" height="0.14" color="#38bdf8"></a-cylinder>
+          <a-cylinder class="rain-drop" position="0 -0.55 -0.05" radius="0.018" height="0.14" color="#38bdf8"></a-cylinder>
+          <a-cylinder class="rain-drop" position="0.20 -0.25 0.05" radius="0.018" height="0.14" color="#38bdf8"></a-cylinder>
+          <a-cylinder class="rain-drop" position="0.45 -0.45 0" radius="0.018" height="0.14" color="#7dd3fc"></a-cylinder>
+        </a-entity>
       </a-entity>
     </a-marker>
 
@@ -342,48 +678,166 @@
   </a-scene>
 
   <script>
-    const state = {
+    // ============================================================
+    // СОСТОЯНИЕ ВСЕХ 5 ЗОН
+    // ============================================================
+    const appState = {
+      activeZone: 1,
+      hiroVisible: false,
+
+      // Зона 1: Ветряк
       targetWind: 6.0,
       currentWind: 6.0,
-      micActive: false
+      micActive: false,
+
+      // Зона 2: Мусорка
+      sortRunning: true,
+      sortSpeed: 1.25,
+      glassCount: 0,
+      plasticCount: 0,
+      paperCount: 0,
+      binFlash: [0, 0, 0],
+
+      // Зона 3: Эко-дома с солнечными панелями
+      sunTime: 55,       // 0..100 (50 = полдень, >78 или <20 = вечер/ночь)
+      batteryLevel: 60,  // 0..100%
+
+      // Зона 4: Парк и эко-парковка
+      waterfallPower: 60,
+      evCharging: true,
+      evChargeLevel: 45,
+
+      // Зона 5: Школа, шприц 20 мл, полив
+      isRaining: false,
+      isIrrigating: false,
+      syringeMl: 0,      // 0..20 мл
+      plantGrowth: 15    // 15..100%
     };
 
-    const windSlider = document.getElementById('windSlider');
-    const windDisplay = document.getElementById('windDisplay');
-    const powerDisplay = document.getElementById('powerDisplay');
-    const homesDisplay = document.getElementById('homesDisplay');
+    const zoneNames = {
+      1: 'Ветрогенератор',
+      2: 'Сортировка отходов',
+      3: 'Солнечные дома',
+      4: 'Эко-парк и парковка',
+      5: 'Школа и сбор дождя'
+    };
+
+    // DOM-элементы HUD
     const statusDot = document.getElementById('statusDot');
     const statusText = document.getElementById('statusText');
-    const micBtn = document.getElementById('micBtn');
-    const calmBtn = document.getElementById('calmBtn');
-    const micHint = document.getElementById('micHint');
-    const marker = document.getElementById('wind-marker');
+    const zoneTabs = Array.from(document.querySelectorAll('.zone-tab'));
+    const zonePanels = Array.from(document.querySelectorAll('.zone-panel'));
 
-    marker.addEventListener('markerFound', () => {
-      statusDot.classList.add('active');
-      statusText.textContent = 'Ветряк активен';
+    // Элементы маркеров и слотов
+    const hiroMarker = document.getElementById('marker-hiro');
+    const hiroSlot = document.getElementById('hiro-slot');
+    const barcodeMarkers = {
+      1: document.getElementById('marker-1'),
+      2: document.getElementById('marker-2'),
+      3: document.getElementById('marker-3'),
+      4: document.getElementById('marker-4'),
+      5: document.getElementById('marker-5')
+    };
+    const zoneEntities = {
+      1: document.getElementById('zone-1'),
+      2: document.getElementById('zone-2'),
+      3: document.getElementById('zone-3'),
+      4: document.getElementById('zone-4'),
+      5: document.getElementById('zone-5')
+    };
+
+    // Переключение активной зоны (и привязка к Hiro при тесте)
+    function selectZone(zoneNum, attachToHiro = false) {
+      appState.activeZone = zoneNum;
+
+      zoneTabs.forEach((btn) => {
+        btn.classList.toggle('active', Number(btn.dataset.zone) === zoneNum);
+      });
+      zonePanels.forEach((panel) => {
+        panel.classList.toggle('active', panel.id === `panel-${zoneNum}`);
+      });
+
+      if (attachToHiro || appState.hiroVisible) {
+        // Возвращаем все зоны на свои маркеры, а выбранную крепим к Hiro
+        for (let i = 1; i <= 5; i++) {
+          if (i === zoneNum) {
+            hiroSlot.object3D.add(zoneEntities[i].object3D);
+            zoneEntities[i].object3D.visible = true;
+          } else {
+            barcodeMarkers[i].object3D.add(zoneEntities[i].object3D);
+            zoneEntities[i].object3D.visible = true;
+          }
+        }
+        statusText.textContent = `Hiro: ${zoneNames[zoneNum]}`;
+      }
+    }
+
+    // Клики по вкладкам 5 зон
+    zoneTabs.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const z = Number(btn.dataset.zone);
+        selectZone(z, appState.hiroVisible);
+      });
     });
 
-    marker.addEventListener('markerLost', () => {
+    // События маркера Hiro
+    hiroMarker.addEventListener('markerFound', () => {
+      appState.hiroVisible = true;
+      statusDot.classList.add('active');
+      selectZone(appState.activeZone, true);
+    });
+
+    hiroMarker.addEventListener('markerLost', () => {
+      appState.hiroVisible = false;
+      // Возвращаем модели на их родные barcode-маркеры
+      for (let i = 1; i <= 5; i++) {
+        barcodeMarkers[i].object3D.add(zoneEntities[i].object3D);
+      }
       statusDot.classList.remove('active');
       statusText.textContent = 'Наведите на маркер';
     });
 
+    // События 5 barcode-маркеров
+    for (let i = 1; i <= 5; i++) {
+      barcodeMarkers[i].addEventListener('markerFound', () => {
+        barcodeMarkers[i].object3D.add(zoneEntities[i].object3D);
+        zoneEntities[i].object3D.visible = true;
+        selectZone(i, false);
+        statusDot.classList.add('active');
+        statusText.textContent = `Зона ${i}: ${zoneNames[i]}`;
+      });
+
+      barcodeMarkers[i].addEventListener('markerLost', () => {
+        if (!appState.hiroVisible && appState.activeZone === i) {
+          statusDot.classList.remove('active');
+          statusText.textContent = 'Наведите на маркер';
+        }
+      });
+    }
+
+    // ============================================================
+    // УПРАВЛЕНИЕ ЗОНОЙ 1: ВЕТРЯК + МИКРОФОН
+    // ============================================================
+    const windSlider = document.getElementById('windSlider');
+    const windDisplay = document.getElementById('windDisplay');
+    const powerDisplay = document.getElementById('powerDisplay');
+    const homesDisplay = document.getElementById('homesDisplay');
+    const micBtn = document.getElementById('micBtn');
+    const calmBtn = document.getElementById('calmBtn');
+    const micHint = document.getElementById('micHint');
+
+    let audioCtx = null, analyser = null, micStream = null, micDataArray = null;
+
     windSlider.addEventListener('input', (e) => {
-      if (state.micActive) stopMic();
-      state.targetWind = parseFloat(e.target.value);
+      if (appState.micActive) stopMic();
+      appState.targetWind = parseFloat(e.target.value);
     });
 
     calmBtn.addEventListener('click', () => {
-      if (state.micActive) stopMic();
-      state.targetWind = 0;
+      if (appState.micActive) stopMic();
+      appState.targetWind = 0;
       windSlider.value = 0;
     });
-
-    let audioCtx = null;
-    let analyser = null;
-    let micStream = null;
-    let micDataArray = null;
 
     async function startMic() {
       try {
@@ -395,116 +849,389 @@
         analyser.fftSize = 256;
         source.connect(analyser);
         micDataArray = new Uint8Array(analyser.frequencyBinCount);
-
-        state.micActive = true;
-        micBtn.classList.add('listening');
+        appState.micActive = true;
+        micBtn.className = 'btn btn-green';
         micBtn.textContent = '🟢 Дуйте в микрофон!';
         micHint.textContent = 'Подуйте на телефон — лопасти ускорятся';
       } catch (err) {
         micHint.textContent = 'Нет доступа к микрофону — используйте ползунок';
-        console.error('Ошибка микрофона:', err);
       }
     }
 
     function stopMic() {
-      state.micActive = false;
-      if (micStream) {
-        micStream.getTracks().forEach((t) => t.stop());
-        micStream = null;
-      }
-      if (audioCtx) {
-        audioCtx.close();
-        audioCtx = null;
-      }
-      micBtn.classList.remove('listening');
+      appState.micActive = false;
+      if (micStream) { micStream.getTracks().forEach((t) => t.stop()); micStream = null; }
+      if (audioCtx) { audioCtx.close(); audioCtx = null; }
+      micBtn.className = 'btn btn-primary';
       micBtn.textContent = '🎤 Подуть в микрофон';
-      micHint.textContent = 'Двигайте ползунок или подуйте в микрофон телефона';
+      micHint.textContent = 'Маркер 1 (или Hiro): двигайте ползунок или дуйте в микрофон';
     }
 
     micBtn.addEventListener('click', () => {
-      if (state.micActive) {
-        stopMic();
-      } else {
-        startMic();
-      }
+      appState.micActive ? stopMic() : startMic();
     });
 
-    AFRAME.registerComponent('wind-turbine-controller', {
+    // ============================================================
+    // УПРАВЛЕНИЕ ЗОНОЙ 2: МУСОРКА
+    // ============================================================
+    const sortSpeedSlider = document.getElementById('sortSpeedSlider');
+    const toggleSortBtn = document.getElementById('toggleSortBtn');
+    const resetSortBtn = document.getElementById('resetSortBtn');
+    const glassCountEl = document.getElementById('glassCount');
+    const plasticCountEl = document.getElementById('plasticCount');
+    const paperCountEl = document.getElementById('paperCount');
+
+    sortSpeedSlider.addEventListener('input', (e) => {
+      appState.sortSpeed = parseFloat(e.target.value);
+    });
+
+    toggleSortBtn.addEventListener('click', () => {
+      appState.sortRunning = !appState.sortRunning;
+      toggleSortBtn.textContent = appState.sortRunning ? '⏸ Пауза сортировки' : '▶ Запустить сортировку';
+      toggleSortBtn.className = appState.sortRunning ? 'btn btn-green' : 'btn btn-primary';
+    });
+
+    resetSortBtn.addEventListener('click', () => {
+      appState.glassCount = 0;
+      appState.plasticCount = 0;
+      appState.paperCount = 0;
+      glassCountEl.textContent = '0';
+      plasticCountEl.textContent = '0';
+      paperCountEl.textContent = '0';
+    });
+
+    // ============================================================
+    // УПРАВЛЕНИЕ ЗОНОЙ 3: ЭКО-ДОМА С СОЛНЕЧНЫМИ ПАНЕЛЯМИ
+    // ============================================================
+    const sunSlider = document.getElementById('sunSlider');
+    const noonBtn = document.getElementById('noonBtn');
+    const eveningBtn = document.getElementById('eveningBtn');
+    const sunDisplay = document.getElementById('sunDisplay');
+    const batteryDisplay = document.getElementById('batteryDisplay');
+    const lightsDisplay = document.getElementById('lightsDisplay');
+
+    sunSlider.addEventListener('input', (e) => {
+      appState.sunTime = parseFloat(e.target.value);
+    });
+
+    noonBtn.addEventListener('click', () => {
+      appState.sunTime = 50;
+      sunSlider.value = 50;
+    });
+
+    eveningBtn.addEventListener('click', () => {
+      appState.sunTime = 95;
+      sunSlider.value = 95;
+    });
+
+    // ============================================================
+    // УПРАВЛЕНИЕ ЗОНОЙ 4: ПАРК И ЭКО-ПАРКОВКА
+    // ============================================================
+    const waterfallSlider = document.getElementById('waterfallSlider');
+    const chargeEvBtn = document.getElementById('chargeEvBtn');
+    const evChargeDisplay = document.getElementById('evChargeDisplay');
+    const waterfallDisplay = document.getElementById('waterfallDisplay');
+
+    waterfallSlider.addEventListener('input', (e) => {
+      appState.waterfallPower = parseFloat(e.target.value);
+      waterfallDisplay.textContent = Math.round(appState.waterfallPower * 0.7);
+    });
+
+    chargeEvBtn.addEventListener('click', () => {
+      appState.evCharging = !appState.evCharging;
+      chargeEvBtn.textContent = appState.evCharging ? '⚡ Заряжать авто: ВКЛ' : '⚡ Заряжать авто: ВЫКЛ';
+      chargeEvBtn.className = appState.evCharging ? 'btn btn-green' : 'btn btn-secondary';
+    });
+
+    // ============================================================
+    // УПРАВЛЕНИЕ ЗОНОЙ 5: ШКОЛА + ШПРИЦ 20 МЛ + ПОЛИВ
+    // ============================================================
+    const rainBtn = document.getElementById('rainBtn');
+    const irrigateBtn = document.getElementById('irrigateBtn');
+    const resetSchoolBtn = document.getElementById('resetSchoolBtn');
+    const syringeDisplay = document.getElementById('syringeDisplay');
+    const irrigStatusDisplay = document.getElementById('irrigStatusDisplay');
+    const plantGrowthDisplay = document.getElementById('plantGrowthDisplay');
+
+    rainBtn.addEventListener('click', () => {
+      appState.isRaining = !appState.isRaining;
+      if (appState.isRaining) appState.isIrrigating = false;
+      updateSchoolButtons();
+    });
+
+    irrigateBtn.addEventListener('click', () => {
+      if (appState.syringeMl <= 0.2) {
+        irrigStatusDisplay.textContent = 'Нет воды!';
+        return;
+      }
+      appState.isIrrigating = !appState.isIrrigating;
+      if (appState.isIrrigating) appState.isRaining = false;
+      updateSchoolButtons();
+    });
+
+    resetSchoolBtn.addEventListener('click', () => {
+      appState.isRaining = false;
+      appState.isIrrigating = false;
+      appState.syringeMl = 0;
+      appState.plantGrowth = 15;
+      updateSchoolButtons();
+    });
+
+    function updateSchoolButtons() {
+      rainBtn.textContent = appState.isRaining ? '🌧️ Идёт дождь...' : '🌧️ Дождь';
+      rainBtn.className = appState.isRaining ? 'btn btn-yellow' : 'btn btn-primary';
+      irrigateBtn.textContent = appState.isIrrigating ? '💧 Поливаем...' : '🌱 Полить';
+    }
+
+    // ============================================================
+    // ГЛАВНЫЙ ЦИКЛ АНИМАЦИИ ВСЕХ 5 ЗОН (A-FRAME COMPONENT)
+    // ============================================================
+    AFRAME.registerComponent('eco-city-master', {
       init: function () {
+        // Зона 1
         this.rotor = document.getElementById('blades-rotor');
         this.windLines = Array.from(document.querySelectorAll('.wind-line'));
         this.energyPulses = Array.from(document.querySelectorAll('.energy-pulse'));
         this.energyRing = document.getElementById('energy-ring');
-        this.arPowerText = document.getElementById('ar-power-text');
+
+        // Зона 2
+        this.trashItems = [
+          { el: document.getElementById('trash-glass'), y: 1.75, bin: 0 },
+          { el: document.getElementById('trash-plastic'), y: 2.25, bin: 1 },
+          { el: document.getElementById('trash-paper'), y: 2.75, bin: 2 }
+        ];
+        this.binRings = [
+          document.getElementById('bin-ring-0'),
+          document.getElementById('bin-ring-1'),
+          document.getElementById('bin-ring-2')
+        ];
+
+        // Зона 3
+        this.arSun = document.getElementById('ar-sun');
+        this.sunRays = Array.from(document.querySelectorAll('.sun-ray'));
+        this.houseWindows = Array.from(document.querySelectorAll('.house-window'));
+        this.solarPanels = Array.from(document.querySelectorAll('.solar-panel'));
+        this.batteryFill = document.getElementById('battery-fill');
+
+        // Зона 4
+        this.wfDrops = Array.from(document.querySelectorAll('.wf-drop'));
+        this.pondRipple = document.getElementById('pond-ripple');
+        this.evPulse1 = document.getElementById('ev-pulse-1');
+        this.evPulse2 = document.getElementById('ev-pulse-2');
+        this.ripplePhase = 0;
+        this.evPhase = 0;
+
+        // Зона 5
+        this.rainCloud = document.getElementById('rain-cloud');
+        this.rainDrops = Array.from(document.querySelectorAll('.rain-drop'));
+        this.syringeWater = document.getElementById('syringe-water');
+        this.pipeDrop = document.getElementById('pipe-drop');
+        this.plantsGroup = document.getElementById('plants-group');
+        this.plantFlowers = Array.from(document.querySelectorAll('.plant-flower'));
+        this.pipePhase = 0;
+
         this.uiTimer = 0;
       },
 
       tick: function (time, timeDelta) {
         const dt = Math.min(timeDelta / 1000, 0.1);
+        this.uiTimer += dt;
 
-        if (state.micActive && analyser && micDataArray) {
+        // ---------- 1. ВЕТРЯК ----------
+        if (appState.micActive && analyser && micDataArray) {
           analyser.getByteFrequencyData(micDataArray);
           let sum = 0;
-          for (let i = 0; i < micDataArray.length; i++) {
-            sum += micDataArray[i];
-          }
+          for (let i = 0; i < micDataArray.length; i++) sum += micDataArray[i];
           const avg = sum / micDataArray.length;
           const mappedWind = Math.max(0, Math.min(20, (avg - 12) * 0.45));
-          state.targetWind = mappedWind;
+          appState.targetWind = mappedWind;
           windSlider.value = mappedWind.toFixed(1);
         }
-
-        state.currentWind += (state.targetWind - state.currentWind) * Math.min(1, dt * 2.5);
-        if (state.currentWind < 0.05) state.currentWind = 0;
+        appState.currentWind += (appState.targetWind - appState.currentWind) * Math.min(1, dt * 2.5);
+        if (appState.currentWind < 0.05) appState.currentWind = 0;
 
         if (this.rotor) {
-          const angularSpeed = state.currentWind * 0.55;
-          this.rotor.object3D.rotation.z -= angularSpeed * dt;
+          this.rotor.object3D.rotation.z -= appState.currentWind * 0.55 * dt;
         }
-
-        const windOpacity = Math.min(0.85, state.currentWind / 8);
-        for (let i = 0; i < this.windLines.length; i++) {
-          const line = this.windLines[i];
+        const windOpacity = Math.min(0.85, appState.currentWind / 8);
+        this.windLines.forEach((line) => {
           line.setAttribute('material', 'opacity', windOpacity);
-          if (state.currentWind > 0.2) {
-            line.object3D.position.x += (0.8 + state.currentWind * 0.28) * dt;
-            if (line.object3D.position.x > 1.6) {
-              line.object3D.position.x = -1.6;
-            }
+          if (appState.currentWind > 0.2) {
+            line.object3D.position.x += (0.8 + appState.currentWind * 0.28) * dt;
+            if (line.object3D.position.x > 1.5) line.object3D.position.x = -1.5;
           }
-        }
-
-        const powerRatio = Math.min(1, state.currentWind / 14);
-        const pulseOpacity = state.currentWind > 1.0 ? 0.3 + powerRatio * 0.7 : 0;
-        for (let i = 0; i < this.energyPulses.length; i++) {
-          const pulse = this.energyPulses[i];
+        });
+        const powerRatio = Math.min(1, appState.currentWind / 14);
+        const pulseOpacity = appState.currentWind > 1.0 ? 0.3 + powerRatio * 0.7 : 0;
+        this.energyPulses.forEach((pulse) => {
           pulse.setAttribute('material', 'opacity', pulseOpacity);
-          if (state.currentWind > 1.0) {
-            pulse.object3D.position.y -= (0.4 + state.currentWind * 0.12) * dt;
-            if (pulse.object3D.position.y < 0.15) {
-              pulse.object3D.position.y = 2.15;
-            }
+          if (appState.currentWind > 1.0) {
+            pulse.object3D.position.y -= (0.4 + appState.currentWind * 0.12) * dt;
+            if (pulse.object3D.position.y < 0.15) pulse.object3D.position.y = 2.15;
           }
-        }
-
+        });
         if (this.energyRing) {
           this.energyRing.setAttribute('material', 'opacity', 0.15 + powerRatio * 0.85);
         }
 
-        this.uiTimer += dt;
+        // ---------- 2. МУСОРКА ----------
+        if (appState.sortRunning) {
+          this.trashItems.forEach((item) => {
+            item.y -= appState.sortSpeed * 0.85 * dt;
+            item.el.object3D.rotation.y += 2.2 * dt;
+            if (item.y <= 0.68) {
+              item.y = 2.1 + Math.random() * 0.5;
+              appState.binFlash[item.bin] = 1.0;
+              if (item.bin === 0) appState.glassCount++;
+              if (item.bin === 1) appState.plasticCount++;
+              if (item.bin === 2) appState.paperCount++;
+            }
+            item.el.object3D.position.y = item.y;
+          });
+        }
+        for (let b = 0; b < 3; b++) {
+          if (appState.binFlash[b] > 0) {
+            appState.binFlash[b] = Math.max(0, appState.binFlash[b] - dt * 2.2);
+          }
+          this.binRings[b].setAttribute('material', 'opacity', 0.15 + appState.binFlash[b] * 0.85);
+        }
+
+        // ---------- 3. СОЛНЕЧНЫЕ ДОМА ----------
+        const angle = (appState.sunTime / 100) * Math.PI; // 0..PI
+        const sunIntensity = Math.max(0, Math.sin(angle)); // 0 ночью, 1 в полдень
+        if (this.arSun) {
+          const sunX = -Math.cos(angle) * 1.15;
+          const sunY = 0.55 + sunIntensity * 1.45;
+          this.arSun.object3D.position.set(sunX, sunY, -0.15);
+          this.arSun.setAttribute('visible', sunIntensity > 0.08);
+        }
+        const isEvening = sunIntensity < 0.35;
+        this.sunRays.forEach((ray) => {
+          ray.setAttribute('material', 'opacity', sunIntensity > 0.25 ? sunIntensity * 0.7 : 0);
+        });
+        this.solarPanels.forEach((p) => {
+          p.setAttribute('material', 'emissiveIntensity', 0.1 + sunIntensity * 0.8);
+        });
+        if (sunIntensity > 0.35) {
+          appState.batteryLevel = Math.min(100, appState.batteryLevel + sunIntensity * 6 * dt);
+        } else if (appState.batteryLevel > 5) {
+          appState.batteryLevel = Math.max(5, appState.batteryLevel - 2.5 * dt);
+        }
+        const windowGlow = isEvening && appState.batteryLevel > 5 ? 0.95 : 0;
+        this.houseWindows.forEach((win) => {
+          win.setAttribute('material', 'emissiveIntensity', windowGlow);
+          win.setAttribute('material', 'color', windowGlow > 0 ? '#ffd400' : '#334155');
+        });
+        if (this.batteryFill) {
+          const bScale = Math.max(0.05, appState.batteryLevel / 100);
+          this.batteryFill.object3D.scale.y = bScale;
+          this.batteryFill.object3D.position.y = -0.32 + (bScale * 0.62) / 2;
+        }
+
+        // ---------- 4. ПАРК И ЭКО-ПАРКОВКА ----------
+        const wfRatio = appState.waterfallPower / 100;
+        this.wfDrops.forEach((drop) => {
+          drop.setAttribute('material', 'opacity', wfRatio > 0.05 ? 0.85 : 0);
+          if (wfRatio > 0.05) {
+            drop.object3D.position.y -= (0.4 + wfRatio * 0.9) * dt;
+            if (drop.object3D.position.y < 0.12) drop.object3D.position.y = 0.54;
+          }
+        });
+        if (this.pondRipple) {
+          this.ripplePhase = (this.ripplePhase + dt * (0.6 + wfRatio)) % 1;
+          const rScale = 0.4 + this.ripplePhase * 1.4;
+          this.pondRipple.object3D.scale.set(rScale, rScale, 1);
+          this.pondRipple.setAttribute('material', 'opacity', wfRatio > 0.05 ? (1 - this.ripplePhase) * 0.85 : 0);
+        }
+        if (appState.evCharging) {
+          appState.evChargeLevel = Math.min(100, appState.evChargeLevel + 4.5 * dt);
+          if (appState.evChargeLevel >= 100) appState.evChargeLevel = 20;
+          this.evPhase = (this.evPhase + dt * 1.4) % 1;
+          const zPos = -0.25 + this.evPhase * 0.38;
+          this.evPulse1.object3D.position.z = zPos;
+          this.evPulse2.object3D.position.z = zPos;
+          this.evPulse1.setAttribute('material', 'opacity', 0.9);
+          this.evPulse2.setAttribute('material', 'opacity', 0.9);
+        } else {
+          this.evPulse1.setAttribute('material', 'opacity', 0);
+          this.evPulse2.setAttribute('material', 'opacity', 0);
+        }
+
+        // ---------- 5. ШКОЛА, ШПРИЦ 20 МЛ И ПОЛИВ ----------
+        if (this.rainCloud) {
+          this.rainCloud.setAttribute('visible', appState.isRaining);
+        }
+        if (appState.isRaining) {
+          this.rainDrops.forEach((d) => {
+            d.object3D.position.y -= 1.3 * dt;
+            if (d.object3D.position.y < -0.95) d.object3D.position.y = -0.15;
+          });
+          appState.syringeMl = Math.min(20, appState.syringeMl + 4.0 * dt);
+          if (appState.syringeMl >= 20) {
+            appState.isRaining = false;
+            updateSchoolButtons();
+          }
+        }
+        if (appState.isIrrigating) {
+          appState.syringeMl = Math.max(0, appState.syringeMl - 3.5 * dt);
+          appState.plantGrowth = Math.min(100, appState.plantGrowth + 16 * dt);
+          this.pipePhase = (this.pipePhase + dt * 1.8) % 1;
+          this.pipeDrop.object3D.position.x = 0.05 + this.pipePhase * 0.62;
+          this.pipeDrop.setAttribute('material', 'opacity', 0.95);
+          if (appState.syringeMl <= 0) {
+            appState.isIrrigating = false;
+            updateSchoolButtons();
+          }
+        } else {
+          this.pipeDrop.setAttribute('material', 'opacity', 0);
+        }
+
+        // Визуал уровня воды в шприце 20 мл
+        if (this.syringeWater) {
+          const fillRatio = Math.max(0.01, appState.syringeMl / 20);
+          this.syringeWater.object3D.scale.y = fillRatio;
+          this.syringeWater.object3D.position.y = 0.05 + (fillRatio * 0.78) / 2;
+        }
+        // Визуал роста растений и появления цветов
+        if (this.plantsGroup) {
+          const growthScale = 0.2 + (appState.plantGrowth / 100) * 1.0;
+          this.plantsGroup.object3D.scale.set(1, growthScale, 1);
+          const flowerScale = appState.plantGrowth > 65 ? (appState.plantGrowth - 65) / 35 : 0.01;
+          this.plantFlowers.forEach((f) => f.object3D.scale.set(flowerScale, flowerScale, flowerScale));
+        }
+
+        // ---------- ОБНОВЛЕНИЕ ЦИФР В HUD ----------
         if (this.uiTimer > 0.15) {
           this.uiTimer = 0;
-          const w = state.currentWind;
+
+          // Зона 1
+          const w = appState.currentWind;
           const powerKw = w < 1.5 ? 0 : Math.min(100, Math.round(0.45 * w * w + w));
           const homes = powerKw === 0 ? 0 : Math.min(4, Math.max(1, Math.ceil(powerKw / 18)));
-
           windDisplay.textContent = w.toFixed(1);
           powerDisplay.textContent = powerKw;
           homesDisplay.textContent = homes;
 
-          if (this.arPowerText) {
-            this.arPowerText.setAttribute('value', `${powerKw} kW | ${w.toFixed(1)} m/s`);
-          }
+          // Зона 2
+          glassCountEl.textContent = appState.glassCount;
+          plasticCountEl.textContent = appState.plasticCount;
+          paperCountEl.textContent = appState.paperCount;
+
+          // Зона 3
+          sunDisplay.textContent = Math.round(sunIntensity * 100);
+          batteryDisplay.textContent = Math.round(appState.batteryLevel);
+          lightsDisplay.textContent = windowGlow > 0 ? 'Свет ВКЛ' : 'День';
+
+          // Зона 4
+          evChargeDisplay.textContent = Math.round(appState.evChargeLevel);
+
+          // Зона 5
+          syringeDisplay.textContent = appState.syringeMl.toFixed(1);
+          plantGrowthDisplay.textContent = Math.round(appState.plantGrowth);
+          if (appState.isRaining) irrigStatusDisplay.textContent = 'Сбор дождя';
+          else if (appState.isIrrigating) irrigStatusDisplay.textContent = 'Полив...';
+          else if (appState.syringeMl >= 19.5) irrigStatusDisplay.textContent = 'Полный!';
+          else irrigStatusDisplay.textContent = 'Ждёт';
         }
       }
     });
