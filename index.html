@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>ECO CITY 2040 — AR Ветрогенератор</title>
 
-  <!-- A-Frame и AR.js (стабильные версии для iOS и Android) -->
+  <!-- A-Frame и AR.js -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
 
@@ -22,7 +22,6 @@
       color: #ffffff;
     }
 
-    /* Верхняя панель статуса */
     .hud-top {
       position: fixed;
       top: 12px;
@@ -64,7 +63,6 @@
       box-shadow: 0 0 10px #2ecc71;
     }
 
-    /* Нижняя панель управления */
     .hud-bottom {
       position: fixed;
       bottom: 14px;
@@ -226,7 +224,7 @@
   <a-scene
     embedded
     vr-mode-ui="enabled: false"
-    renderer="antialias: true; alpha: true;"
+    renderer="logarithmicDepthBuffer: true; antialias: true; alpha: true;"
     arjs="sourceType: webcam; debugUIEnabled: false;"
   >
     <!-- Маркер Hiro -->
@@ -243,67 +241,72 @@
         <a-cylinder position="0 0.03 0" radius="0.55" height="0.06" color="#2e7d32"></a-cylinder>
         <a-ring
           id="energy-ring"
-          position="0 0.068 0"
+          position="0 0.075 0"
           rotation="-90 0 0"
           radius-inner="0.38"
           radius-outer="0.48"
           material="color: #ffd400; emissive: #ffd400; emissiveIntensity: 0.7; opacity: 0.85; transparent: true;"
         ></a-ring>
 
-        <!-- Белая коническая мачта (используем a-cone для правильного сужения) -->
-        <a-cone
+        <!-- Белая мачта (надежный a-cylinder с точным radius) -->
+        <a-cylinder
           position="0 1.15 0"
-          radius-bottom="0.11"
-          radius-top="0.055"
+          radius="0.08"
           height="2.2"
           segments-radial="24"
           color="#f4f6f8"
-          material="metalness: 0.1; roughness: 0.4;"
-        ></a-cone>
+        ></a-cylinder>
 
-        <!-- Две фирменные зелёные полосы на мачте (с запасом по радиусу, чтобы не рябили) -->
-        <a-cone
+        <!-- Нижнее утолщение основания мачты -->
+        <a-cylinder
+          position="0 0.25 0"
+          radius="0.11"
+          height="0.4"
+          segments-radial="24"
+          color="#e8edf2"
+        ></a-cylinder>
+
+        <!-- Две фирменные зелёные полосы на мачте (радиус больше на 0.01, чтобы не рябили) -->
+        <a-cylinder
           position="0 0.95 0"
-          radius-bottom="0.096"
-          radius-top="0.094"
+          radius="0.092"
           height="0.08"
           segments-radial="24"
           color="#2ecc71"
-        ></a-cone>
-        <a-cone
+        ></a-cylinder>
+        <a-cylinder
           position="0 1.12 0"
-          radius-bottom="0.092"
-          radius-top="0.090"
+          radius="0.092"
           height="0.08"
           segments-radial="24"
           color="#2ecc71"
-        ></a-cone>
+        ></a-cylinder>
 
         <!-- Гондола (генератор сверху) -->
-        <a-box position="0 2.27 0.02" width="0.16" height="0.16" depth="0.38" color="#e8edf2"></a-box>
+        <a-box position="0 2.27 0.02" width="0.18" height="0.18" depth="0.38" color="#e8edf2"></a-box>
         <!-- Носовой обтекатель -->
-        <a-cone position="0 2.27 0.27" rotation="90 0 0" radius-bottom="0.085" radius-top="0.015" height="0.16" segments-radial="20" color="#ffffff"></a-cone>
+        <a-sphere position="0 2.27 0.22" radius="0.09" color="#ffffff"></a-sphere>
 
         <!-- Вращающийся ротор с 3 лопастями -->
-        <a-entity id="blades-rotor" position="0 2.27 0.23">
+        <a-entity id="blades-rotor" position="0 2.27 0.24">
           <!-- Лопасть 1 -->
           <a-entity rotation="0 0 0">
             <a-box position="0 0.54 0" width="0.095" height="1.05" depth="0.022" rotation="0 16 0" color="#ffffff"></a-box>
-            <a-box position="0 0.96 0" width="0.08" height="0.16" depth="0.026" rotation="0 16 0" color="#2ecc71"></a-box>
+            <a-box position="0 0.96 0" width="0.085" height="0.16" depth="0.028" rotation="0 16 0" color="#2ecc71"></a-box>
           </a-entity>
           <!-- Лопасть 2 -->
           <a-entity rotation="0 0 120">
             <a-box position="0 0.54 0" width="0.095" height="1.05" depth="0.022" rotation="0 16 0" color="#ffffff"></a-box>
-            <a-box position="0 0.96 0" width="0.08" height="0.16" depth="0.026" rotation="0 16 0" color="#2ecc71"></a-box>
+            <a-box position="0 0.96 0" width="0.085" height="0.16" depth="0.028" rotation="0 16 0" color="#2ecc71"></a-box>
           </a-entity>
           <!-- Лопасть 3 -->
           <a-entity rotation="0 0 240">
             <a-box position="0 0.54 0" width="0.095" height="1.05" depth="0.022" rotation="0 16 0" color="#ffffff"></a-box>
-            <a-box position="0 0.96 0" width="0.08" height="0.16" depth="0.026" rotation="0 16 0" color="#2ecc71"></a-box>
+            <a-box position="0 0.96 0" width="0.085" height="0.16" depth="0.028" rotation="0 16 0" color="#2ecc71"></a-box>
           </a-entity>
         </a-entity>
 
-        <!-- Потоки ветра (анимируются в JS) -->
+        <!-- Потоки ветра -->
         <a-entity id="wind-streams">
           <a-box class="wind-line" position="-1.2 2.7 0.35" width="0.55" height="0.025" depth="0.025" material="color: #4cc9f0; emissive: #4cc9f0; opacity: 0.7; transparent: true;"></a-box>
           <a-box class="wind-line" position="-0.4 2.2 0.45" width="0.65" height="0.025" depth="0.025" material="color: #90e0ef; emissive: #90e0ef; opacity: 0.7; transparent: true;"></a-box>
@@ -314,21 +317,21 @@
 
         <!-- Импульсы энергии, бегущие вниз по мачте -->
         <a-entity id="energy-pulses">
-          <a-torus class="energy-pulse" position="0 2.0 0" rotation="90 0 0" radius="0.13" radius-tubular="0.018" material="color: #ffd400; emissive: #ffd400; opacity: 0.9; transparent: true;"></a-torus>
+          <a-torus class="energy-pulse" position="0 2.0 0" rotation="90 0 0" radius="0.14" radius-tubular="0.018" material="color: #ffd400; emissive: #ffd400; opacity: 0.9; transparent: true;"></a-torus>
           <a-torus class="energy-pulse" position="0 1.3 0" rotation="90 0 0" radius="0.14" radius-tubular="0.018" material="color: #ffd400; emissive: #ffd400; opacity: 0.9; transparent: true;"></a-torus>
-          <a-torus class="energy-pulse" position="0 0.6 0" rotation="90 0 0" radius="0.15" radius-tubular="0.018" material="color: #ffd400; emissive: #ffd400; opacity: 0.9; transparent: true;"></a-torus>
+          <a-torus class="energy-pulse" position="0 0.6 0" rotation="90 0 0" radius="0.14" radius-tubular="0.018" material="color: #ffd400; emissive: #ffd400; opacity: 0.9; transparent: true;"></a-torus>
         </a-entity>
 
         <!-- Парящий 3D-индикатор мощности над ветряком -->
         <a-entity position="0 3.55 0">
-          <a-plane width="1.55" height="0.42" material="color: #0f1115; opacity: 0.85; transparent: true; side: double;"></a-plane>
+          <a-plane width="1.6" height="0.42" material="color: #0f1115; opacity: 0.85; transparent: true; side: double;"></a-plane>
           <a-text
             id="ar-power-text"
             value="18 kW | 6.0 m/s"
             align="center"
             color="#ffd400"
             width="3.2"
-            position="0 0 0.04"
+            position="0 0 0.06"
           ></a-text>
         </a-entity>
 
@@ -339,10 +342,9 @@
   </a-scene>
 
   <script>
-    // Глобальное состояние ветра
     const state = {
-      targetWind: 6.0,   // Целевая скорость ветра (м/с)
-      currentWind: 6.0,  // Текущая (сглаженная с инерцией)
+      targetWind: 6.0,
+      currentWind: 6.0,
       micActive: false
     };
 
@@ -357,7 +359,6 @@
     const micHint = document.getElementById('micHint');
     const marker = document.getElementById('wind-marker');
 
-    // Отслеживание маркера
     marker.addEventListener('markerFound', () => {
       statusDot.classList.add('active');
       statusText.textContent = 'Ветряк активен';
@@ -368,20 +369,17 @@
       statusText.textContent = 'Наведите на маркер';
     });
 
-    // Управление ползунком
     windSlider.addEventListener('input', (e) => {
       if (state.micActive) stopMic();
       state.targetWind = parseFloat(e.target.value);
     });
 
-    // Кнопка "Штиль"
     calmBtn.addEventListener('click', () => {
       if (state.micActive) stopMic();
       state.targetWind = 0;
       windSlider.value = 0;
     });
 
-    // --- Датчик дыхания через микрофон ---
     let audioCtx = null;
     let analyser = null;
     let micStream = null;
@@ -431,7 +429,6 @@
       }
     });
 
-    // Компонент A-Frame для анимации ветряка, ветра и энергии
     AFRAME.registerComponent('wind-turbine-controller', {
       init: function () {
         this.rotor = document.getElementById('blades-rotor');
@@ -445,7 +442,6 @@
       tick: function (time, timeDelta) {
         const dt = Math.min(timeDelta / 1000, 0.1);
 
-        // Читаем уровень шума/дуновения с микрофона
         if (state.micActive && analyser && micDataArray) {
           analyser.getByteFrequencyData(micDataArray);
           let sum = 0;
@@ -458,17 +454,14 @@
           windSlider.value = mappedWind.toFixed(1);
         }
 
-        // Плавная инерция раскручивания и торможения лопастей
         state.currentWind += (state.targetWind - state.currentWind) * Math.min(1, dt * 2.5);
         if (state.currentWind < 0.05) state.currentWind = 0;
 
-        // 1. Вращение лопастей
         if (this.rotor) {
           const angularSpeed = state.currentWind * 0.55;
           this.rotor.object3D.rotation.z -= angularSpeed * dt;
         }
 
-        // 2. Анимация потоков ветра
         const windOpacity = Math.min(0.85, state.currentWind / 8);
         for (let i = 0; i < this.windLines.length; i++) {
           const line = this.windLines[i];
@@ -481,7 +474,6 @@
           }
         }
 
-        // 3. Импульсы энергии вниз по мачте
         const powerRatio = Math.min(1, state.currentWind / 14);
         const pulseOpacity = state.currentWind > 1.0 ? 0.3 + powerRatio * 0.7 : 0;
         for (let i = 0; i < this.energyPulses.length; i++) {
@@ -495,12 +487,10 @@
           }
         }
 
-        // Подсветка кольца у основания
         if (this.energyRing) {
           this.energyRing.setAttribute('material', 'opacity', 0.15 + powerRatio * 0.85);
         }
 
-        // 4. Обновление цифр в интерфейсе
         this.uiTimer += dt;
         if (this.uiTimer > 0.15) {
           this.uiTimer = 0;
