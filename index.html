@@ -226,66 +226,80 @@
   <a-scene
     embedded
     vr-mode-ui="enabled: false"
-    renderer="logarithmicDepthBuffer: true; antialias: true; alpha: true;"
+    renderer="antialias: true; alpha: true;"
     arjs="sourceType: webcam; debugUIEnabled: false;"
   >
-    <!-- Маркер Hiro (базовый маркер для быстрого старта) -->
+    <!-- Маркер Hiro -->
     <a-marker preset="hiro" id="wind-marker" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2">
       
       <!-- Контейнер всей 3D-модели ветряка -->
       <a-entity id="turbine-root" position="0 0 0" scale="0.75 0.75 0.75" wind-turbine-controller>
 
         <!-- Освещение сцены -->
-        <a-light type="ambient" color="#ffffff" intensity="0.75"></a-light>
+        <a-light type="ambient" color="#ffffff" intensity="0.8"></a-light>
         <a-light type="directional" color="#fffbe6" intensity="0.9" position="2 4 3"></a-light>
 
         <!-- Основание (зелёная площадка + светящееся энергетическое кольцо) -->
-        <a-cylinder position="0 0.03 0" radius="0.65" height="0.06" color="#2e7d32"></a-cylinder>
+        <a-cylinder position="0 0.03 0" radius="0.55" height="0.06" color="#2e7d32"></a-cylinder>
         <a-ring
           id="energy-ring"
-          position="0 0.065 0"
+          position="0 0.068 0"
           rotation="-90 0 0"
-          radius-inner="0.45"
-          radius-outer="0.56"
+          radius-inner="0.38"
+          radius-outer="0.48"
           material="color: #ffd400; emissive: #ffd400; emissiveIntensity: 0.7; opacity: 0.85; transparent: true;"
         ></a-ring>
 
-        <!-- Белая мачта (коническая, как на макете) -->
-        <a-cylinder
+        <!-- Белая коническая мачта (используем a-cone для правильного сужения) -->
+        <a-cone
           position="0 1.15 0"
           radius-bottom="0.11"
-          radius-top="0.065"
+          radius-top="0.055"
           height="2.2"
+          segments-radial="24"
           color="#f4f6f8"
-          metalness="0.1"
-          roughness="0.4"
-        ></a-cylinder>
+          material="metalness: 0.1; roughness: 0.4;"
+        ></a-cone>
 
-        <!-- Две фирменные зелёные полосы на мачте -->
-        <a-cylinder position="0 0.95 0" radius-bottom="0.095" radius-top="0.093" height="0.08" color="#2ecc71"></a-cylinder>
-        <a-cylinder position="0 1.12 0" radius-bottom="0.091" radius-top="0.089" height="0.08" color="#2ecc71"></a-cylinder>
+        <!-- Две фирменные зелёные полосы на мачте (с запасом по радиусу, чтобы не рябили) -->
+        <a-cone
+          position="0 0.95 0"
+          radius-bottom="0.096"
+          radius-top="0.094"
+          height="0.08"
+          segments-radial="24"
+          color="#2ecc71"
+        ></a-cone>
+        <a-cone
+          position="0 1.12 0"
+          radius-bottom="0.092"
+          radius-top="0.090"
+          height="0.08"
+          segments-radial="24"
+          color="#2ecc71"
+        ></a-cone>
 
         <!-- Гондола (генератор сверху) -->
-        <a-box position="0 2.28 0.02" width="0.18" height="0.18" depth="0.42" color="#e8edf2"></a-box>
+        <a-box position="0 2.27 0.02" width="0.16" height="0.16" depth="0.38" color="#e8edf2"></a-box>
         <!-- Носовой обтекатель -->
-        <a-cone position="0 2.28 0.28" rotation="90 0 0" radius-bottom="0.09" radius-top="0.01" height="0.16" color="#ffffff"></a-cone>
+        <a-cone position="0 2.27 0.27" rotation="90 0 0" radius-bottom="0.085" radius-top="0.015" height="0.16" segments-radial="20" color="#ffffff"></a-cone>
 
         <!-- Вращающийся ротор с 3 лопастями -->
-        <a-entity id="blades-rotor" position="0 2.28 0.24">
+        <a-entity id="blades-rotor" position="0 2.27 0.23">
           <!-- Лопасть 1 -->
           <a-entity rotation="0 0 0">
-            <a-box position="0 0.55 0" width="0.09" height="1.05" depth="0.02" rotation="0 18 0" color="#ffffff"></a-box>
-            <a-box position="0 0.95 0" width="0.075" height="0.15" depth="0.022" rotation="0 18 0" color="#2ecc71"></a-box>
+            <a-box position="0 0.54 0" width="0.095" height="1.05" depth="0.022" rotation="0 16 0" color="#ffffff"></a-box>
+            <a-box position="0 0.96 0" width="0.08" height="0.16" depth="0.026" rotation="0 16 0" color="#2ecc71"></a-box>
           </a-entity>
           <!-- Лопасть 2 -->
           <a-entity rotation="0 0 120">
-            <a-box position="0 0.55 0" width="0.09" height="1.05" depth="0.02" rotation="0 18 0" color="#ffffff"></a-box>
-            <a-box position="0 0.95 0" width="0.075" height="0.15" depth="0.022" rotation="0 18 0" color="#2ecc71"></a-box>
+            <a-box position="0 0.54 0" width="0.095" height="1.05" depth="0.022" rotation="0 16 0" color="#ffffff"></a-box>
+            <a-box position="0 0.96 0" width="0.08" height="0.16" depth="0.026" rotation="0 16 0" color="#2ecc71"></a-box>
           </a-entity>
           <!-- Лопасть 3 -->
           <a-entity rotation="0 0 240">
-            <a-box position="0 0.55 0" width="0.09" height="1.05" depth="0.02" rotation="0 18 0" color="#ffffff"></a-box>
-            <a-box position="0 0.95 0" width="0.075" height="0.15" depth="0.022" rotation="0 18 0" color="#2ecc71"></a-box>
+            <a-box position="0 0.54 0" width="0.095" height="1.05" depth="0.022" rotation="0 16 0" color="#ffffff"></a-box>
+            <a-box position="0 0.96 0" width="0.08" height="0.16" depth="0.026" rotation="0 16 0" color="#2ecc71"></a-box>
           </a-entity>
         </a-entity>
 
@@ -300,21 +314,21 @@
 
         <!-- Импульсы энергии, бегущие вниз по мачте -->
         <a-entity id="energy-pulses">
-          <a-torus class="energy-pulse" position="0 2.0 0" rotation="90 0 0" radius="0.12" radius-tubular="0.018" material="color: #ffd400; emissive: #ffd400; opacity: 0.9; transparent: true;"></a-torus>
-          <a-torus class="energy-pulse" position="0 1.3 0" rotation="90 0 0" radius="0.13" radius-tubular="0.018" material="color: #ffd400; emissive: #ffd400; opacity: 0.9; transparent: true;"></a-torus>
-          <a-torus class="energy-pulse" position="0 0.6 0" rotation="90 0 0" radius="0.14" radius-tubular="0.018" material="color: #ffd400; emissive: #ffd400; opacity: 0.9; transparent: true;"></a-torus>
+          <a-torus class="energy-pulse" position="0 2.0 0" rotation="90 0 0" radius="0.13" radius-tubular="0.018" material="color: #ffd400; emissive: #ffd400; opacity: 0.9; transparent: true;"></a-torus>
+          <a-torus class="energy-pulse" position="0 1.3 0" rotation="90 0 0" radius="0.14" radius-tubular="0.018" material="color: #ffd400; emissive: #ffd400; opacity: 0.9; transparent: true;"></a-torus>
+          <a-torus class="energy-pulse" position="0 0.6 0" rotation="90 0 0" radius="0.15" radius-tubular="0.018" material="color: #ffd400; emissive: #ffd400; opacity: 0.9; transparent: true;"></a-torus>
         </a-entity>
 
         <!-- Парящий 3D-индикатор мощности над ветряком -->
         <a-entity position="0 3.55 0">
-          <a-plane width="1.5" height="0.42" material="color: #0f1115; opacity: 0.8; transparent: true;"></a-plane>
+          <a-plane width="1.55" height="0.42" material="color: #0f1115; opacity: 0.85; transparent: true; side: double;"></a-plane>
           <a-text
             id="ar-power-text"
             value="18 kW | 6.0 m/s"
             align="center"
             color="#ffd400"
             width="3.2"
-            position="0 0 0.02"
+            position="0 0 0.04"
           ></a-text>
         </a-entity>
 
@@ -439,7 +453,6 @@
             sum += micDataArray[i];
           }
           const avg = sum / micDataArray.length;
-          // Преобразуем громкость дуновения в скорость ветра (0..20 м/с)
           const mappedWind = Math.max(0, Math.min(20, (avg - 12) * 0.45));
           state.targetWind = mappedWind;
           windSlider.value = mappedWind.toFixed(1);
@@ -451,7 +464,7 @@
 
         // 1. Вращение лопастей
         if (this.rotor) {
-          const angularSpeed = state.currentWind * 0.55; // рад/с
+          const angularSpeed = state.currentWind * 0.55;
           this.rotor.object3D.rotation.z -= angularSpeed * dt;
         }
 
@@ -487,12 +500,11 @@
           this.energyRing.setAttribute('material', 'opacity', 0.15 + powerRatio * 0.85);
         }
 
-        // 4. Обновление цифр в интерфейсе (примерно 6 раз в секунду)
+        // 4. Обновление цифр в интерфейсе
         this.uiTimer += dt;
         if (this.uiTimer > 0.15) {
           this.uiTimer = 0;
           const w = state.currentWind;
-          // Условная формула мощности для школьного проекта (0..100 кВт)
           const powerKw = w < 1.5 ? 0 : Math.min(100, Math.round(0.45 * w * w + w));
           const homes = powerKw === 0 ? 0 : Math.min(4, Math.max(1, Math.ceil(powerKw / 18)));
 
